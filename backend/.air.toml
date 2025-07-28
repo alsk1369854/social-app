@@ -3,12 +3,12 @@ testdata_dir = "testdata"
 tmp_dir = "tmp"
 
 [build]
-  cmd = "make debug-main-file"
+  cmd = "make debug-file"
   full_bin = "dlv exec ./tmp/main --listen=127.0.0.1:12345 --headless=true --api-version=2 --accept-multiclient --continue --log -- "
+  exclude_dir = ["assets", "tmp", "vendor", "testdata", "docs", "tmp"]
   args_bin = []
   bin = "./tmp/main"
   delay = 1000
-  exclude_dir = ["assets", "tmp", "vendor", "testdata"]
   exclude_file = []
   exclude_regex = ["_test.go"]
   exclude_unchanged = false

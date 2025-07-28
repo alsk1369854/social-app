@@ -3,13 +3,13 @@
 debug:
 	air -c .air.toml
 
-.PHONY:debug-main-file-clear
-debug-main-file-clear:
+.PHONY:debug-file-clear
+debug-file-clear:
 	rm -rf ./tmp/main
 
 # using at .air.toml
-debug-main-file: remove-tmp
-# 	swag init
+debug-file: debug-file-clear
+	swag init
 	CGO_ENABLED=0 go build -gcflags=all="-N -l" -o tmp/main main.go
 
 
