@@ -1,1 +1,1 @@
-# -nknu-social-app
+# nknu-social-app
