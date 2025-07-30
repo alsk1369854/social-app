@@ -1,12 +1,16 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 
 	_ "backend/docs"
+	"backend/internal/database"
 
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -34,28 +38,38 @@ func ping(ctx *gin.Context) {
 // @name Authorization
 // @basePath /api
 func main() {
-	addr := "0.0.0.0:8080"
-	engin := gin.Default()
+	// Command line flags for host and port
+	var host string
+	var port string
+	flag.StringVar(&host, "host", "0.0.0.0", "Host for the server")
+	flag.StringVar(&port, "port", "8080", "Port for the server")
+	flag.Parse()
 
+	// Load environment variables from .env file
+	if err := godotenv.Load(); err != nil {
+		log.Fatalf("Failed to load .env file: %v", err)
+	}
+
+	// Connect to SQLite database
+	db, err := database.ConnectToSQLLine(os.Getenv("SQLITE_DATABASE"))
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	database.Migrate(db)
+
+	// Build API
+	engin := gin.Default()
 	api := engin.Group("/api")
 	{
 		api.GET("/ping", ping)
 	}
-
-	// swagger docs
-	// http://localhost:8080/docs
-	// docs := engin.Group("/docs")
-	// {
-	// 	docs.GET("", func(ctx *gin.Context) {
-	// 		ctx.Redirect(http.StatusPermanentRedirect, "/docs/index.html")
-	// 	})
-	// 	docs.GET("*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	// }
-
-	// http://localhost:8080/swagger/index.html
+	// Add API documentation, e.g http://localhost:8080/swagger/index.html
 	engin.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	engin.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	if err := engin.Run(addr); err != nil {
+	// Start server
+	log.Printf("Server is running on %s:%s", host, port)
+	if err := engin.Run(host + ":" + port); err != nil {
 		log.Fatal(err)
 	}
 }

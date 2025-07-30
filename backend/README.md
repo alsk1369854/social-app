@@ -48,10 +48,23 @@ air init
 
 ### Install libs
 ```bash
-go get -u gorm.io/gorm
+# env loader
+go get github.com/joho/godotenv
+
+# gin
 go get -u github.com/gin-gonic/gin
+
+# gorm
+go get -u gorm.io/gorm
+go get gorm.io/driver/postgres
+go get gorm.io/driver/sqlite
+
+# swagger
 go get github.com/swaggo/files
 go get github.com/swaggo/gin-swagger
+
+# errors
+go get github.com/pkg/errors
 ```
 
 ### Import Swagger lib
