@@ -1,0 +1,99 @@
+@startuml 用戶註冊類圖
+!theme plain
+
+title 用戶註冊系統類圖
+
+package "models" {
+    class User {
+        +ID: string
+        +Username: string
+        +Email: string
+        -Password: string
+        +Age: *int
+        +City: string
+        +CreatedAt: time.Time
+        +UpdatedAt: time.Time
+        +DeletedAt: gorm.DeletedAt
+    }
+    
+    class RegisterRequest {
+        +Username: string {required,min=1}
+        +Email: string {required,email}
+        +Password: string {required,min=6,max=12}
+        +Age: *int {omitempty}
+        +City: string {omitempty}
+    }
+    
+    class RegisterResponse {
+        +Message: string
+    }
+    
+    class ErrorResponse {
+        +Error: string
+    }
+}
+
+package "handlers" {
+    class AuthHandler {
+        -authService: *AuthService
+        +NewAuthHandler(authService): *AuthHandler
+        +Register(c): void
+    }
+}
+
+package "services" {
+    class AuthService {
+        -userRepo: *UserRepository
+        +NewAuthService(db): *AuthService
+        +HashPassword(password): string
+        +RegisterUser(req): (*RegisterResponse, error)
+    }
+}
+
+package "repositories" {
+    class UserRepository {
+        -db: *gorm.DB
+        +NewUserRepository(db): *UserRepository
+        +FindByUsername(username): (*User, error)
+        +FindByEmail(email): (*User, error)
+        +Create(user): error
+        +FindByID(id): (*User, error)
+    }
+}
+
+package "database" {
+    class Database <<interface>> {
+        +gorm.DB
+    }
+}
+
+' 關聯關係
+AuthHandler --> AuthService : uses
+AuthService --> UserRepository : uses
+UserRepository --> Database : uses
+UserRepository --> User : manages
+
+AuthHandler ..> RegisterRequest : receives
+AuthHandler ..> RegisterResponse : returns
+AuthHandler ..> ErrorResponse : returns
+
+AuthService ..> RegisterRequest : processes
+AuthService ..> RegisterResponse : creates
+AuthService ..> User : creates
+
+note right of User::Password
+  密碼使用 SHA256 
+  加密儲存，不以
+  明碼形式存在
+end note
+
+note right of RegisterRequest
+  驗證規則：
+  - username: 必填, 最少1字符
+  - email: 必填, 有效email格式
+  - password: 必填, 6-12字符
+  - age: 選填
+  - city: 選填
+end note
+
+@enduml

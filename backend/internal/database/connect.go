@@ -9,41 +9,40 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-// ConnectToPostgres 連線到 Postgres Database
-//
-// param host string 主機地址
-// param user string 使用者名稱
-// param password string 使用者密碼
-// param name string 資料庫名稱
-// param port string 服務端口
-// returns *gorm.DB 資料庫連接
-// returns error 錯誤
-func ConnectToPostgres(
-	host,
-	user,
-	password,
-	name,
-	port string,
-	doLog bool,
-) (*gorm.DB, error) {
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Taipei",
-		host, user, password, name, port,
-	)
-	if doLog {
-		return gorm.Open(postgres.Open(dsn), &gorm.Config{
-			Logger: logger.Default.LogMode(logger.Info),
-		})
-	} else {
-		return gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	}
-
+type PostgresConfig struct {
+	Host      string
+	Port      string
+	User      string
+	Password  string
+	DBName    string
+	Timezone  string
+	EnableLog bool
 }
 
-// ConnectToSQLLine
-//
-//	param filename string 資料檔案名稱
-//	return *gorm.DB database connect
-//	return error
-func ConnectToSQLLine(filename string) (*gorm.DB, error) {
-	return gorm.Open(sqlite.Open(filename), &gorm.Config{})
+func ConnectToPostgres(cfg PostgresConfig) (*gorm.DB, error) {
+	if cfg.Timezone == "" {
+		cfg.Timezone = "Asia/Taipei"
+	}
+
+	dsn := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=%s",
+		cfg.Host, cfg.User, cfg.Password, cfg.DBName, cfg.Port, cfg.Timezone,
+	)
+
+	gormCfg := &gorm.Config{}
+	if cfg.EnableLog {
+		gormCfg.Logger = logger.Default.LogMode(logger.Info)
+	}
+
+	return gorm.Open(postgres.Open(dsn), gormCfg)
+}
+
+func ConnectToSQLite(dbFile string) (*gorm.DB, error) {
+	dsn := fmt.Sprintf("file:%s?cache=shared&mode=rwc", dbFile)
+
+	gormCfg := &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	}
+
+	return gorm.Open(sqlite.Open(dsn), gormCfg)
 }

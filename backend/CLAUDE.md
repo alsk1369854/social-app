@@ -7,6 +7,7 @@
 - 採用 [PlantUML](https://plantuml.com/zh/) 繪製系統圖
 - 採用 `github.com/pkg/errors` 庫進行錯誤包裝，以利進行程式錯誤位置追蹤
 - 採用 `Singleton pattern` 建構專案模組
+- 每項功能都需撰寫單元測試
 
 
 ### 專案結構
@@ -17,7 +18,6 @@
 - `./internal/handlers/` 放置 API 對應的處裡邏輯，向下調用 `services` 中的方法完成業務邏輯
 - `./internal/services/` 放置業務的數據處裡邏輯，在此維護 **Database Translation** 操作
 - `./internal/repositories/` 放置資料庫訪問邏輯，在此維護對應資料表的 **CRUD** 方法
-- `./internal/entities/` 放置資料庫中資料表 **GORM** 的映射 **struct**
 - `./internal/database/` 放置資料庫連線與 **GORM** 資料表結構綁定等操作
 - `./internal/models/` 放置 API 接收參數與響應參數的 **struct**
 - `./internal/pkg/<util-name>` 放置所需的工具包，提取重複性程式碼至對應的工具包中進行操作

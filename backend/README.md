@@ -25,7 +25,7 @@ air init
 [build]
   cmd = "make debug-file"
   full_bin = "dlv exec ./tmp/main --listen=127.0.0.1:12345 --headless=true --api-version=2 --accept-multiclient --continue --log -- "
-  exclude_dir = ["assets", "tmp", "vendor", "testdata", "docs", "tmp"]
+  exclude_dir = ["assets", "tmp", "vendor", "testdata", "docs", "tmp", "postgres-data"]
 ```
 
 ### Create `.vscode/launch.json`
@@ -89,4 +89,10 @@ func main() {
 make debug
 
 # Execute vscode debug run "Attach to Go Process"
+```
+
+
+## Test
+```bash
+go test ./... -v
 ```

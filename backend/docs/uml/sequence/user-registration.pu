@@ -1,0 +1,59 @@
+@startuml 用戶註冊序列圖
+!theme plain
+autonumber
+
+title 用戶註冊流程
+
+actor "用戶" as User
+participant "Router\n(API)" as Router
+participant "AuthHandler" as Handler
+participant "AuthService" as Service
+participant "UserRepository" as Repository
+database "Database" as DB
+
+== 用戶註冊 ==
+User -> Router: POST /api/auth/register\n{username, email, password, age?, city?}
+Router -> Handler: Register(context)
+
+== 請求驗證 ==
+Handler -> Handler: ShouldBindJSON()
+alt 請求格式錯誤
+    Handler -> User: 400 Bad Request\n{"error": "請求格式錯誤，<具體錯誤>"}
+else 格式正確
+    Handler -> Service: RegisterUser(request)
+    
+    == 檢查用戶名唯一性 ==
+    Service -> Repository: FindByUsername(username)
+    Repository -> DB: SELECT * FROM users WHERE username = ?
+    DB -> Repository: 查詢結果
+    Repository -> Service: existingUser
+    
+    alt 用戶名已存在
+        Service -> Handler: error "帳號已存在"
+        Handler -> User: 400 Bad Request\n{"error": "帳號已存在"}
+    else 用戶名可用
+        
+        == 檢查Email唯一性 ==
+        Service -> Repository: FindByEmail(email)
+        Repository -> DB: SELECT * FROM users WHERE email = ?
+        DB -> Repository: 查詢結果
+        Repository -> Service: existingUser
+        
+        alt Email已存在
+            Service -> Handler: error "email 已存在"
+            Handler -> User: 400 Bad Request\n{"error": "email 已存在"}
+        else Email可用
+            
+            == 創建用戶 ==
+            Service -> Service: HashPassword(password)\n使用 SHA256 加密
+            Service -> Repository: Create(user)
+            Repository -> DB: INSERT INTO users (username, email, password, age, city)
+            DB -> Repository: 創建成功
+            Repository -> Service: nil (成功)
+            Service -> Handler: RegisterResponse{"message": "註冊成功"}
+            Handler -> User: 200 OK\n{"message": "註冊成功"}
+        end
+    end
+end
+
+@enduml

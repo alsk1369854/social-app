@@ -10,7 +10,9 @@ debug-file-clear:
 # using at .air.toml
 debug-file: debug-file-clear
 	swag init
-	CGO_ENABLED=0 go build -gcflags=all="-N -l" -o tmp/main main.go
+# 	with sqlite
+	CGO_ENABLED=1 go build -gcflags=all="-N -l" -o tmp/main main.go
+# 	CGO_ENABLED=0 go build -gcflags=all="-N -l" -o tmp/main main.go
 
 
 # make build

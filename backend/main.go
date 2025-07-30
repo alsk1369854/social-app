@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -11,24 +10,12 @@ import (
 
 	_ "backend/docs"
 	"backend/internal/database"
+	"backend/internal/middlewares"
+	"backend/internal/routers"
 
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
-
-// @title Test API
-// @Summary Test API
-// @Tags Test
-// @Accept application/json
-// @Produce application/json
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]interface{}
-// @Router /api/ping [get]
-func ping(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "pong",
-	})
-}
 
 // @title Social APP API
 // @version 1.0
@@ -50,18 +37,30 @@ func main() {
 		log.Fatalf("Failed to load .env file: %v", err)
 	}
 
-	// Connect to SQLite database
-	db, err := database.ConnectToSQLLine(os.Getenv("SQLITE_DATABASE"))
+	// Connect to database
+	db, err := database.ConnectToPostgres(database.PostgresConfig{
+		Host:      os.Getenv("DB_HOST"),
+		Port:      os.Getenv("DB_PORT"),
+		User:      os.Getenv("DB_USER"),
+		Password:  os.Getenv("DB_PASSWORD"),
+		DBName:    os.Getenv("DB_NAME"),
+		Timezone:  "Asia/Taipei",
+		EnableLog: true,
+	})
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	database.Migrate(db)
+	if err := database.Migrate(db); err != nil {
+		log.Fatalf("Failed to migrate database: %v", err)
+	}
 
 	// Build API
 	engin := gin.Default()
 	api := engin.Group("/api")
+	api.Use(middlewares.SetGORMDB(db))
 	{
-		api.GET("/ping", ping)
+		routers.NewCityRouter().Bind(api)
+		routers.NewUserRouter().Bind(api)
 	}
 	// Add API documentation, e.g http://localhost:8080/swagger/index.html
 	engin.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

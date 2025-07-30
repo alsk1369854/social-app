@@ -1,10 +1,48 @@
+definitions:
+  models.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  models.SuccessResponse:
+    properties:
+      success:
+        type: boolean
+    type: object
+  models.UserRegisterRequest:
+    properties:
+      address:
+        properties:
+          cityID:
+            type: integer
+          street:
+            type: string
+        required:
+        - cityID
+        - street
+        type: object
+      age:
+        type: integer
+      email:
+        type: string
+      password:
+        maxLength: 12
+        minLength: 6
+        type: string
+      username:
+        type: string
+    required:
+    - email
+    - password
+    - username
+    type: object
 info:
   contact: {}
   description: Social APP API
   title: Social APP API
   version: "1.0"
 paths:
-  /api/ping:
+  /api/city/all:
     get:
       consumes:
       - application/json
@@ -14,16 +52,48 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            items:
+              items:
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                type: object
+              type: array
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get all cities
+      tags:
+      - City
+  /api/user/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: User registration request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserRegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
         "400":
           description: Bad Request
           schema:
-            additionalProperties: true
-            type: object
-      summary: Test API
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Register a new user
       tags:
-      - Test
+      - User
 securityDefinitions:
   bearerToken:
     in: header
