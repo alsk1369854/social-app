@@ -33,18 +33,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "id": {
-                                            "type": "integer"
-                                        },
-                                        "name": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
+                                "$ref": "#/definitions/models.CityGetAllResponseItem"
                             }
                         }
                     },
@@ -84,7 +73,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.SuccessResponse"
+                            "$ref": "#/definitions/models.UserRegisterResponse"
                         }
                     },
                     "400": {
@@ -98,19 +87,22 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "models.CityGetAllResponseItem": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "models.ErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
                     "type": "string"
-                }
-            }
-        },
-        "models.SuccessResponse": {
-            "type": "object",
-            "properties": {
-                "success": {
-                    "type": "boolean"
                 }
             }
         },
@@ -123,19 +115,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "address": {
-                    "type": "object",
-                    "required": [
-                        "cityID",
-                        "street"
-                    ],
-                    "properties": {
-                        "cityID": {
-                            "type": "integer"
-                        },
-                        "street": {
-                            "type": "string"
-                        }
-                    }
+                    "$ref": "#/definitions/models.UserRegisterRequestAddress"
                 },
                 "age": {
                     "type": "integer"
@@ -149,6 +129,49 @@ const docTemplate = `{
                     "minLength": 6
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.UserRegisterRequestAddress": {
+            "type": "object",
+            "required": [
+                "cityID",
+                "street"
+            ],
+            "properties": {
+                "cityID": {
+                    "type": "string"
+                },
+                "street": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.UserRegisterResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "$ref": "#/definitions/models.UserRegisterResponseAddress"
+                },
+                "age": {
+                    "type": "integer"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.UserRegisterResponseAddress": {
+            "type": "object",
+            "properties": {
+                "cityID": {
+                    "type": "string"
+                },
+                "street": {
                     "type": "string"
                 }
             }

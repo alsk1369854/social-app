@@ -1,26 +1,20 @@
 definitions:
+  models.CityGetAllResponseItem:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
   models.ErrorResponse:
     properties:
       error:
         type: string
     type: object
-  models.SuccessResponse:
-    properties:
-      success:
-        type: boolean
-    type: object
   models.UserRegisterRequest:
     properties:
       address:
-        properties:
-          cityID:
-            type: integer
-          street:
-            type: string
-        required:
-        - cityID
-        - street
-        type: object
+        $ref: '#/definitions/models.UserRegisterRequestAddress'
       age:
         type: integer
       email:
@@ -35,6 +29,34 @@ definitions:
     - email
     - password
     - username
+    type: object
+  models.UserRegisterRequestAddress:
+    properties:
+      cityID:
+        type: string
+      street:
+        type: string
+    required:
+    - cityID
+    - street
+    type: object
+  models.UserRegisterResponse:
+    properties:
+      address:
+        $ref: '#/definitions/models.UserRegisterResponseAddress'
+      age:
+        type: integer
+      email:
+        type: string
+      username:
+        type: string
+    type: object
+  models.UserRegisterResponseAddress:
+    properties:
+      cityID:
+        type: string
+      street:
+        type: string
     type: object
 info:
   contact: {}
@@ -53,14 +75,7 @@ paths:
           description: OK
           schema:
             items:
-              items:
-                properties:
-                  id:
-                    type: integer
-                  name:
-                    type: string
-                type: object
-              type: array
+              $ref: '#/definitions/models.CityGetAllResponseItem'
             type: array
         "500":
           description: Internal Server Error
@@ -86,7 +101,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.SuccessResponse'
+            $ref: '#/definitions/models.UserRegisterResponse'
         "400":
           description: Bad Request
           schema:

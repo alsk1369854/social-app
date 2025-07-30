@@ -10,9 +10,7 @@ import (
 )
 
 type GinConfig struct {
-	DB   *gorm.DB
-	Host string
-	Port string
+	DB *gorm.DB
 }
 
 func SetupGin(cfg *GinConfig) (*gin.Engine, *gin.RouterGroup) {

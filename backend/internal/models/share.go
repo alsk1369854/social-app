@@ -1,5 +1,11 @@
 package models
 
+import "github.com/google/uuid"
+
+type TableModel struct {
+	ID uuid.UUID `gorm:"primaryKey"`
+}
+
 type MessageResponse struct {
 	Message string `json:"message"`
 }

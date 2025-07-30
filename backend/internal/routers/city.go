@@ -38,7 +38,7 @@ func (r *CityRouter) Bind(_router *gin.RouterGroup) {
 // @Tags City
 // @Accept application/json
 // @Produce application/json
-// @Success 200 {array} models.CityGetAllResponse
+// @Success 200 {object} models.CityGetAllResponse
 // @Failure 500 {object} models.ErrorResponse
 // @Router /api/city/all [get]
 func (r *CityRouter) GetAll(ctx *gin.Context) {
@@ -48,5 +48,13 @@ func (r *CityRouter) GetAll(ctx *gin.Context) {
 		log.Panic(err)
 		return
 	}
-	ctx.JSON(200, cities)
+
+	responseBody := make(models.CityGetAllResponse, len(cities))
+	for i, city := range cities {
+		responseBody[i] = models.CityGetAllResponseItem{
+			ID:   city.ID,
+			Name: city.Name,
+		}
+	}
+	ctx.JSON(200, responseBody)
 }

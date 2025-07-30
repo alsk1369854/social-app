@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type CityService struct {
@@ -24,10 +25,14 @@ func NewCityService() *CityService {
 	return cityService
 }
 
-func (s *CityService) GetByID(ctx *gin.Context, cityID uint) (*models.City, error) {
+func (s *CityService) GetByID(ctx *gin.Context, cityID uuid.UUID) (*models.City, error) {
 	return s.CityRepository.GetByID(ctx, cityID)
 }
 
 func (s *CityService) GetAll(ctx *gin.Context) ([]models.City, error) {
 	return s.CityRepository.GetAll(ctx)
+}
+
+func (s *CityService) Create(ctx *gin.Context, cityBaseSlice []models.CityBase) ([]models.City, error) {
+	return s.CityRepository.Create(ctx, cityBaseSlice)
 }

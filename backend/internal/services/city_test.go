@@ -5,6 +5,7 @@ import (
 	"backend/internal/tests"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
@@ -24,15 +25,13 @@ func TestCityServiceGetByID(t *testing.T) {
 	defer cleanup()
 
 	t.Run("成功找到城市", func(t *testing.T) {
-		cityID := uint(3)
-		expectedCity := &models.City{
-			Model: gorm.Model{ID: cityID},
-			Name:  "台北市",
-		}
-
 		repo := NewCityService()
-		city, err := repo.GetByID(ctx, cityID)
 
+		citySlice, err := repo.Create(ctx, []models.CityBase{{Name: "台北市"}})
+		assert.NoError(t, err)
+		expectedCity := citySlice[0]
+
+		city, err := repo.GetByID(ctx, expectedCity.ID)
 		assert.NoError(t, err)
 		assert.NotNil(t, city)
 		assert.Equal(t, expectedCity.ID, city.ID)
@@ -40,10 +39,8 @@ func TestCityServiceGetByID(t *testing.T) {
 	})
 
 	t.Run("城市不存在", func(t *testing.T) {
-		cityID := uint(999)
-
 		repo := NewCityService()
-		city, err := repo.GetByID(ctx, cityID)
+		city, err := repo.GetByID(ctx, uuid.New())
 
 		assert.Error(t, err)
 		assert.Nil(t, city)

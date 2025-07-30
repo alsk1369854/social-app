@@ -25,7 +25,7 @@ func main() {
 	var host string
 	var port string
 	flag.StringVar(&host, "host", "0.0.0.0", "Host for the server")
-	flag.StringVar(&port, "port", "8080", "Port for the server")
+	flag.StringVar(&port, "port", "28080", "Port for the server")
 	flag.Parse()
 
 	// Load environment variables from .env file
@@ -46,15 +46,12 @@ func main() {
 
 	// Setup Gin server
 	server, apiRouter := servers.SetupGin(&servers.GinConfig{
-		DB:   db,
-		Host: host,
-		Port: port,
+		DB: db,
 	})
 	routers.NewCityRouter().Bind(apiRouter)
 	routers.NewUserRouter().Bind(apiRouter)
 
 	// Start the server
-	log.Printf("Server is running on %s:%s", host, port)
 	if err := server.Run(host + ":" + port); err != nil {
 		log.Fatal(err)
 	}

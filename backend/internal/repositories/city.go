@@ -6,26 +6,29 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type CityRepository struct{}
 
 var cityOnce sync.Once
-var cityRepository *CityRepository
+var cityInstance *CityRepository
 
 func NewCityRepository() *CityRepository {
 	cityOnce.Do(func() {
-		cityRepository = &CityRepository{}
+		cityInstance = &CityRepository{}
 	})
-	return cityRepository
+	return cityInstance
 }
 
-func (r *CityRepository) GetByID(ctx *gin.Context, cityID uint) (*models.City, error) {
+func (r *CityRepository) GetByID(ctx *gin.Context, cityID uuid.UUID) (*models.City, error) {
 	db := ctx.MustGet(middlewares.CONTEXT_KEY_GORM_DB).(*gorm.DB)
 
 	city := &models.City{}
-	if err := db.Model(city).Where(&models.City{Model: gorm.Model{ID: cityID}}).First(city).Error; err != nil {
+	if err := db.Model(city).
+		Where(&models.City{TableModel: models.TableModel{ID: cityID}}).
+		First(city).Error; err != nil {
 		return nil, err
 	}
 	return city, nil
@@ -39,4 +42,20 @@ func (r *CityRepository) GetAll(ctx *gin.Context) ([]models.City, error) {
 		return nil, err
 	}
 	return cities, nil
+}
+
+func (r *CityRepository) Create(ctx *gin.Context, cityBaseSlice []models.CityBase) ([]models.City, error) {
+	db := ctx.MustGet(middlewares.CONTEXT_KEY_GORM_DB).(*gorm.DB)
+
+	citySlice := make([]models.City, len(cityBaseSlice))
+	for i, cityBase := range cityBaseSlice {
+		citySlice[i] = models.City{
+			TableModel: models.TableModel{ID: uuid.New()},
+			CityBase:   cityBase,
+		}
+	}
+	if err := db.Create(citySlice).Error; err != nil {
+		return nil, err
+	}
+	return citySlice, nil
 }

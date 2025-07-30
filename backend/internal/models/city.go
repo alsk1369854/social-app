@@ -1,13 +1,19 @@
 package models
 
-import "gorm.io/gorm"
+import "github.com/google/uuid"
 
 type City struct {
-	gorm.Model
-	Name string `json:"name"`
+	TableModel
+	CityBase
 }
 
-type CityGetAllResponse []struct {
-	ID   uint   `json:"id"`
-	Name string `json:"name"`
+type CityBase struct {
+	Name string
+}
+
+type CityGetAllResponse []CityGetAllResponseItem
+
+type CityGetAllResponseItem struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
 }

@@ -1,10 +1,14 @@
 package models
 
-import "gorm.io/gorm"
+import "github.com/google/uuid"
 
 type Address struct {
-	gorm.Model
-	CityID uint   `json:"-"`
-	City   City   `json:"City" gorm:"foreignKey:CityID"`
-	Street string `json:"street"`
+	TableModel
+	AddressBase
+}
+
+type AddressBase struct {
+	CityID uuid.UUID `gorm:"type:uuid"`
+	City   *City     `gorm:"foreignKey:CityID"`
+	Street string
 }

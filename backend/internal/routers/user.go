@@ -10,7 +10,9 @@ import (
 )
 
 type UserRouter struct {
-	CityService *services.CityService
+	UserService    *services.UserService
+	CityService    *services.CityService
+	AddressService *services.AddressService
 }
 
 var userOnce sync.Once
@@ -19,7 +21,9 @@ var userRouter *UserRouter
 func NewUserRouter() *UserRouter {
 	userOnce.Do(func() {
 		userRouter = &UserRouter{
-			CityService: services.NewCityService(),
+			UserService:    services.NewUserService(),
+			CityService:    services.NewCityService(),
+			AddressService: services.NewAddressService(),
 		}
 	})
 	return userRouter
@@ -39,7 +43,7 @@ func (r *UserRouter) Bind(_router *gin.RouterGroup) {
 // @Accept application/json
 // @Produce application/json
 // @Param user body models.UserRegisterRequest true "User registration request"
-// @Success 200 {object} models.SuccessResponse
+// @Success 200 {object} models.UserRegisterResponse
 // @Failure 400 {object} models.ErrorResponse
 // @Router /api/user/register [post]
 func (r *UserRouter) Register(ctx *gin.Context) {
@@ -49,14 +53,25 @@ func (r *UserRouter) Register(ctx *gin.Context) {
 		log.Panic(err)
 		return
 	}
-	if body.Address != nil {
-		cityID := body.Address.CityID
-		_, err := r.CityService.GetByID(ctx, cityID)
-		if err != nil {
-			ctx.JSON(400, models.ErrorResponse{Error: "City not found"})
-			log.Panic(err)
-			return
+
+	user, err := r.UserService.Register(ctx, *body)
+	if err != nil {
+		ctx.JSON(400, models.ErrorResponse{Error: err.Error()})
+		log.Panic(err)
+		return
+	}
+
+	responseBody := models.UserRegisterResponse{
+		Username: user.Username,
+		Email:    user.Email,
+		Age:      user.Age,
+		Address:  nil,
+	}
+	if user.Address != nil {
+		responseBody.Address = &models.UserRegisterResponseAddress{
+			CityID: user.Address.CityID.String(),
+			Street: user.Address.Street,
 		}
 	}
-	ctx.JSON(200, models.SuccessResponse{Success: true})
+	ctx.JSON(200, responseBody)
 }

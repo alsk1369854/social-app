@@ -63,8 +63,9 @@ go get gorm.io/driver/sqlite
 go get github.com/swaggo/files
 go get github.com/swaggo/gin-swagger
 
-# errors
+# other
 go get github.com/pkg/errors
+go get github.com/google/uuid
 ```
 
 ### Import Swagger lib

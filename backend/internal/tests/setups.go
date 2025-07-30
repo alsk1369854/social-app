@@ -5,7 +5,6 @@ import (
 	"backend/internal/middlewares"
 	"backend/internal/servers"
 	"net/http/httptest"
-	"os"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -13,12 +12,12 @@ import (
 
 func SetupTestDB() (*gorm.DB, func()) {
 	db := database.SetupSQLite(&database.SQLiteConfig{
-		DBFile:    "./test.db",
+		DBFile:    ":memory:",
 		EnableLog: false,
 	})
 
 	cleanup := func() {
-		os.Remove("./test.db")
+		// os.Remove("./test.db")
 	}
 
 	return db, cleanup
@@ -37,10 +36,9 @@ func SetupTestContext() (*gin.Context, func()) {
 func SetupTestServer() (*gin.Engine, *gin.RouterGroup, func()) {
 	db, cleanup := SetupTestDB()
 
+	gin.SetMode(gin.ReleaseMode)
 	server, apiRouter := servers.SetupGin(&servers.GinConfig{
-		DB:   db,
-		Host: "localhost",
-		Port: "8080",
+		DB: db,
 	})
 
 	return server, apiRouter, cleanup
