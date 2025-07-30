@@ -1,4 +1,4 @@
-package repositories
+package services
 
 import (
 	"backend/internal/models"
@@ -9,28 +9,28 @@ import (
 	"gorm.io/gorm"
 )
 
-func TestNewCityRepository(t *testing.T) {
+func TestNewCityService(t *testing.T) {
 	t.Run("單例模式測試", func(t *testing.T) {
-		repo1 := NewCityRepository()
-		repo2 := NewCityRepository()
+		repo1 := NewCityService()
+		repo2 := NewCityService()
 
 		assert.Same(t, repo1, repo2, "應該返回相同的實例")
 		assert.NotNil(t, repo1, "實例不應該為 nil")
 	})
 }
 
-func TestCityRepositoryGetByID(t *testing.T) {
+func TestCityServiceGetByID(t *testing.T) {
 	ctx, cleanup := tests.SetupTestContext()
 	defer cleanup()
 
 	t.Run("成功找到城市", func(t *testing.T) {
-		cityID := uint(1)
+		cityID := uint(3)
 		expectedCity := &models.City{
 			Model: gorm.Model{ID: cityID},
 			Name:  "台北市",
 		}
 
-		repo := NewCityRepository()
+		repo := NewCityService()
 		city, err := repo.GetByID(ctx, cityID)
 
 		assert.NoError(t, err)
@@ -42,7 +42,7 @@ func TestCityRepositoryGetByID(t *testing.T) {
 	t.Run("城市不存在", func(t *testing.T) {
 		cityID := uint(999)
 
-		repo := NewCityRepository()
+		repo := NewCityService()
 		city, err := repo.GetByID(ctx, cityID)
 
 		assert.Error(t, err)
@@ -51,13 +51,13 @@ func TestCityRepositoryGetByID(t *testing.T) {
 	})
 }
 
-func TestCityRepositoryGetAll(t *testing.T) {
+func TestCityServiceGetAll(t *testing.T) {
 	ctx, cleanup := tests.SetupTestContext()
 	defer cleanup()
 
 	t.Run("成功獲取所有城市", func(t *testing.T) {
 
-		repo := NewCityRepository()
+		repo := NewCityService()
 		cities, err := repo.GetAll(ctx)
 
 		assert.NoError(t, err)

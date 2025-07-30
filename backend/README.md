@@ -94,5 +94,14 @@ make debug
 
 ## Test
 ```bash
-go test ./... -v
+go test -cover ./... -v
+```
+
+### coverage
+```bash
+go test --coverprofile=./tmp/coverage.out ./...
+
+go tool cover -func=./tmp/coverage.out
+
+go tool cover -html=./tmp/coverage.out -o ./tmp/coverage.html
 ```

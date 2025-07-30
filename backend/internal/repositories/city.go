@@ -25,7 +25,7 @@ func (r *CityRepository) GetByID(ctx *gin.Context, cityID uint) (*models.City, e
 	db := ctx.MustGet(middlewares.CONTEXT_KEY_GORM_DB).(*gorm.DB)
 
 	city := &models.City{}
-	if err := db.Model(city).Where("id = ?", cityID).First(city).Error; err != nil {
+	if err := db.Model(city).Where(&models.City{Model: gorm.Model{ID: cityID}}).First(city).Error; err != nil {
 		return nil, err
 	}
 	return city, nil

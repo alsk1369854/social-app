@@ -2,9 +2,9 @@ package database
 
 import (
 	"fmt"
+	"log"
 
 	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -19,11 +19,10 @@ type PostgresConfig struct {
 	EnableLog bool
 }
 
-func ConnectToPostgres(cfg PostgresConfig) (*gorm.DB, error) {
+func SetupPostgres(cfg *PostgresConfig) *gorm.DB {
 	if cfg.Timezone == "" {
 		cfg.Timezone = "Asia/Taipei"
 	}
-
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=%s",
 		cfg.Host, cfg.User, cfg.Password, cfg.DBName, cfg.Port, cfg.Timezone,
@@ -34,15 +33,12 @@ func ConnectToPostgres(cfg PostgresConfig) (*gorm.DB, error) {
 		gormCfg.Logger = logger.Default.LogMode(logger.Info)
 	}
 
-	return gorm.Open(postgres.Open(dsn), gormCfg)
-}
-
-func ConnectToSQLite(dbFile string) (*gorm.DB, error) {
-	dsn := fmt.Sprintf("file:%s?cache=shared&mode=rwc", dbFile)
-
-	gormCfg := &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+	db, err := gorm.Open(postgres.Open(dsn), gormCfg)
+	if err != nil {
+		log.Fatal("Failed to connect to PostgreSQL database:", err)
 	}
-
-	return gorm.Open(sqlite.Open(dsn), gormCfg)
+	if err := Migrate(db); err != nil {
+		log.Fatal("Failed to migrate database:", err)
+	}
+	return db
 }

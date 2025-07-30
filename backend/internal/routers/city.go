@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"backend/internal/models"
 	"backend/internal/services"
 	"log"
 	"sync"
@@ -43,7 +44,7 @@ func (r *CityRouter) Bind(_router *gin.RouterGroup) {
 func (r *CityRouter) GetAll(ctx *gin.Context) {
 	cities, err := r.CityService.GetAll(ctx)
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": "Failed to retrieve cities"})
+		ctx.JSON(500, models.ErrorResponse{Error: "Failed to retrieve cities"})
 		log.Panic(err)
 		return
 	}

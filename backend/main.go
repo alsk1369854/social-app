@@ -5,16 +5,12 @@ import (
 	"log"
 	"os"
 
-	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
 	_ "backend/docs"
 	"backend/internal/database"
-	"backend/internal/middlewares"
 	"backend/internal/routers"
-
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
+	"backend/internal/servers"
 )
 
 // @title Social APP API
@@ -38,7 +34,7 @@ func main() {
 	}
 
 	// Connect to database
-	db, err := database.ConnectToPostgres(database.PostgresConfig{
+	db := database.SetupPostgres(&database.PostgresConfig{
 		Host:      os.Getenv("DB_HOST"),
 		Port:      os.Getenv("DB_PORT"),
 		User:      os.Getenv("DB_USER"),
@@ -47,28 +43,19 @@ func main() {
 		Timezone:  "Asia/Taipei",
 		EnableLog: true,
 	})
-	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
-	}
-	if err := database.Migrate(db); err != nil {
-		log.Fatalf("Failed to migrate database: %v", err)
-	}
 
-	// Build API
-	engin := gin.Default()
-	api := engin.Group("/api")
-	api.Use(middlewares.SetGORMDB(db))
-	{
-		routers.NewCityRouter().Bind(api)
-		routers.NewUserRouter().Bind(api)
-	}
-	// Add API documentation, e.g http://localhost:8080/swagger/index.html
-	engin.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	engin.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	// Setup Gin server
+	server, apiRouter := servers.SetupGin(&servers.GinConfig{
+		DB:   db,
+		Host: host,
+		Port: port,
+	})
+	routers.NewCityRouter().Bind(apiRouter)
+	routers.NewUserRouter().Bind(apiRouter)
 
-	// Start server
+	// Start the server
 	log.Printf("Server is running on %s:%s", host, port)
-	if err := engin.Run(host + ":" + port); err != nil {
+	if err := server.Run(host + ":" + port); err != nil {
 		log.Fatal(err)
 	}
 }
