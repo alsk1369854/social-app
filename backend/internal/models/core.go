@@ -6,6 +6,10 @@ type TableModel struct {
 	ID uuid.UUID `gorm:"primaryKey"`
 }
 
+type JWTClaimsData struct {
+	UserID uuid.UUID
+}
+
 type MessageResponse struct {
 	Message string `json:"message"`
 }

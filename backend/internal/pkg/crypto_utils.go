@@ -19,13 +19,19 @@ func NewCryptoUtils() *CryptoUtils {
 	return cryptoUtils
 }
 
-func (c *CryptoUtils) Hash256Password(email, username, password string) string {
-	combined := fmt.Sprintf("%s|%s|%s", email, username, password)
+type CryptoUtilsPasswordHashInput struct {
+	Email    string
+	Username string
+	Password string
+}
+
+func (c *CryptoUtils) GeneratePasswordHash(input *CryptoUtilsPasswordHashInput) string {
+	combined := fmt.Sprintf("%s|%s|%s", input.Email, input.Username, input.Password)
 	hash := sha256.Sum256([]byte(combined))
 	return hex.EncodeToString(hash[:])
 }
 
-func (c *CryptoUtils) VerifyPassword(hashedPassword, email, username, password string) bool {
-	expectedHash := c.Hash256Password(email, username, password)
+func (c *CryptoUtils) VerifyPasswordHash(hashedPassword string, input *CryptoUtilsPasswordHashInput) bool {
+	expectedHash := c.GeneratePasswordHash(input)
 	return hashedPassword == expectedHash
 }

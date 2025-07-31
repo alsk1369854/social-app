@@ -48,9 +48,8 @@ type UserLoginRequest struct {
 }
 
 type UserLoginResponse struct {
-	ID           uuid.UUID `json:"id"`
-	Username     string    `json:"username"`
-	Email        string    `json:"email"`
-	AccessToken  string    `json:"accessToken"`
-	RefreshToken string    `json:"refreshToken"`
+	ID          uuid.UUID `json:"id"`
+	Username    string    `json:"username"`
+	Email       string    `json:"email"`
+	AccessToken string    `json:"accessToken"`
 }

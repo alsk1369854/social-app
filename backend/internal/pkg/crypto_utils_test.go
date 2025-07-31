@@ -21,29 +21,49 @@ func TestHash256Password(t *testing.T) {
 	cryptoUtils := NewCryptoUtils()
 
 	t.Run("Hashing Password", func(t *testing.T) {
-		username := "testuser"
-		email := "test@example.com"
+		username := GetRandomString(5)
+		email := username + "@example.com"
 		password := "password123"
-		hashedPassword := cryptoUtils.Hash256Password(email, username, password)
+		hashedPassword := cryptoUtils.GeneratePasswordHash(&CryptoUtilsPasswordHashInput{
+			Email:    email,
+			Username: username,
+			Password: password,
+		})
 
 		assert.NotEmpty(t, hashedPassword, "Hashed password should not be empty")
 	})
 
 	t.Run("Verifying Password", func(t *testing.T) {
-		username := "testuser"
-		email := "test@example.com"
+		username := GetRandomString(5)
+		email := username + "@example.com"
 		password := "password123"
-		hashedPassword := cryptoUtils.Hash256Password(email, username, password)
+		hashedPassword := cryptoUtils.GeneratePasswordHash(&CryptoUtilsPasswordHashInput{
+			Email:    email,
+			Username: username,
+			Password: password,
+		})
 
-		assert.True(t, cryptoUtils.VerifyPassword(hashedPassword, email, username, password), "Expected password to be verified successfully")
+		assert.True(t, cryptoUtils.VerifyPasswordHash(hashedPassword, &CryptoUtilsPasswordHashInput{
+			Email:    email,
+			Username: username,
+			Password: password,
+		}), "Expected password to be verified successfully")
 	})
 
 	t.Run("Verifying Incorrect Password", func(t *testing.T) {
-		username := "testuser"
-		email := "test@example.com"
+		username := GetRandomString(5)
+		email := username + "@example.com"
 		password := "password123"
-		hashedPassword := cryptoUtils.Hash256Password(email, username, password)
+		hashedPassword := cryptoUtils.GeneratePasswordHash(&CryptoUtilsPasswordHashInput{
+			Email:    email,
+			Username: username,
+			Password: password,
+		})
 
-		assert.False(t, cryptoUtils.VerifyPassword(hashedPassword, email, username, "wrongpassword"), "Expected password verification to fail")
+		assert.False(t, cryptoUtils.VerifyPasswordHash(hashedPassword, &CryptoUtilsPasswordHashInput{
+			Email:    email,
+			Username: username,
+			Password: "wrongpassword",
+		}), "Expected password verification to fail")
 	})
 }

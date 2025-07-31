@@ -45,16 +45,31 @@ func TestUserRouter(t *testing.T) {
 			loginReq.Header.Set("Content-Type", "application/json")
 			loginRecorder := httptest.NewRecorder()
 			server.ServeHTTP(loginRecorder, loginReq)
+
 			loginResponse := &models.UserLoginResponse{}
 			err := json.Unmarshal(loginRecorder.Body.Bytes(), loginResponse)
 			assert.NoError(t, err, "Response should be valid JSON")
 
 			assert.Equal(t, 200, loginRecorder.Code)
 			assert.NotEmpty(t, loginResponse.AccessToken, "Token should not be empty")
-			assert.NotEmpty(t, loginResponse.RefreshToken, "Refresh token should not be empty")
 			assert.Equal(t, loginResponse.Username, payload.Username)
 			assert.Equal(t, loginResponse.Email, payload.Email)
 			assert.NotEmpty(t, loginResponse.ID, "User ID should not be empty")
+		})
+
+		t.Run("登入失敗 - 錯誤的電子郵件或密碼", func(t *testing.T) {
+			// 嘗試登入不存在的用戶
+			loginPayload := models.UserLoginRequest{
+				Email:    "nonexistent@example.com",
+				Password: "wrongpassword",
+			}
+			loginBuf, _ := httpUtils.ToJSONBuffer(loginPayload)
+			loginReq, _ := http.NewRequest("POST", "/api/user/login", loginBuf)
+			loginReq.Header.Set("Content-Type", "application/json")
+			loginRecorder := httptest.NewRecorder()
+			server.ServeHTTP(loginRecorder, loginReq)
+
+			assert.Equal(t, 400, loginRecorder.Code, "應該回傳 400 表示登入失敗")
 		})
 
 	})

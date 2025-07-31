@@ -4,8 +4,10 @@ import (
 	"backend/internal/models"
 	"backend/internal/pkg"
 	"backend/internal/repositories"
-	"errors"
+	"os"
 	"sync"
+
+	"github.com/pkg/errors"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -44,7 +46,15 @@ func (s *UserService) GetByEmail(ctx *gin.Context, email string) (*models.User, 
 	return s.UserRepository.GetByEmail(ctx, email)
 }
 
-func (s *UserService) Register(ctx *gin.Context, userData models.UserRegisterRequest) (*models.User, error) {
+func (s *UserService) Create(ctx *gin.Context, userBaseSlice []models.UserBase) ([]models.User, error) {
+	return s.UserRepository.Create(ctx, userBaseSlice)
+}
+
+func (s *UserService) DeleteByID(ctx *gin.Context, userID uuid.UUID) error {
+	return s.UserRepository.DeleteByID(ctx, userID)
+}
+
+func (s *UserService) Register(ctx *gin.Context, userData *models.UserRegisterRequest) (*models.User, error) {
 
 	// 檢查 email 是否存在
 	if _, err := s.GetByEmail(ctx, userData.Email); err == nil {
@@ -71,7 +81,11 @@ func (s *UserService) Register(ctx *gin.Context, userData models.UserRegisterReq
 	}
 	// 建立 User 資料
 	cryptoUtils := pkg.NewCryptoUtils()
-	HashedPassword := cryptoUtils.Hash256Password(userData.Email, userData.Username, userData.Password)
+	HashedPassword := cryptoUtils.GeneratePasswordHash(&pkg.CryptoUtilsPasswordHashInput{
+		Email:    userData.Email,
+		Username: userData.Username,
+		Password: userData.Password,
+	})
 	userBase := models.UserBase{
 		Username:       userData.Username,
 		Email:          userData.Email,
@@ -96,10 +110,39 @@ func (s *UserService) Register(ctx *gin.Context, userData models.UserRegisterReq
 	return result, nil
 }
 
-func (s *UserService) Create(ctx *gin.Context, userBaseSlice []models.UserBase) ([]models.User, error) {
-	return s.UserRepository.Create(ctx, userBaseSlice)
-}
+func (s *UserService) Login(ctx *gin.Context, userData *models.UserLoginRequest) (*models.UserLoginResponse, error) {
+	user, err := s.GetByEmail(ctx, userData.Email)
+	if err != nil {
+		return nil, errors.New("user not found")
+	}
 
-func (s *UserService) DeleteByID(ctx *gin.Context, userID uuid.UUID) error {
-	return s.UserRepository.DeleteByID(ctx, userID)
+	// 驗證密碼
+	cryptoUtils := pkg.NewCryptoUtils()
+	passwordVerified := cryptoUtils.VerifyPasswordHash(user.HashedPassword, &pkg.CryptoUtilsPasswordHashInput{
+		Email:    user.Email,
+		Username: user.Username,
+		Password: userData.Password,
+	})
+	if !passwordVerified {
+		return nil, errors.New("invalid password")
+	}
+
+	// 生成 JWT Token
+	jwtUtils := pkg.NewJWTUtils()
+	accessToken, err := jwtUtils.GenerateToken(
+		&models.JWTClaimsData{UserID: user.ID},
+		os.Getenv(jwtUtils.DefaultEnvKey),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// 構建回應
+	response := &models.UserLoginResponse{
+		ID:          user.ID,
+		Username:    user.Username,
+		Email:       user.Email,
+		AccessToken: accessToken,
+	}
+	return response, nil
 }

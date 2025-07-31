@@ -38,28 +38,30 @@ func (r *UserRouter) Bind(_router *gin.RouterGroup) {
 	}
 }
 
+// @title User API
+// @Summary Login a user
+// @Tags User
+// @Accept application/json
+// @Produce application/json
+// @Param user body models.UserLoginRequest true "User login request"
+// @Success 200 {object} models.UserLoginResponse
+// @Failure 400 {object} models.ErrorResponse
+// @Router /api/user/login [post]
 func (r *UserRouter) Login(ctx *gin.Context) {
-	// body := &models.UserLoginRequest{}
-	// if err := ctx.ShouldBindJSON(body); err != nil {
-	// 	ctx.JSON(400, models.ErrorResponse{Error: "invalid request body"})
-	// 	log.Panic(err)
-	// 	return
-	// }
+	body := &models.UserLoginRequest{}
+	if err := ctx.ShouldBindJSON(body); err != nil {
+		ctx.JSON(400, models.ErrorResponse{Error: "invalid request body"})
+		log.Panic(err)
+		return
+	}
 
-	// user, err := r.UserService.Login(ctx, *body)
-	// if err != nil {
-	// 	ctx.JSON(400, models.ErrorResponse{Error: err.Error()})
-	// 	log.Panic(err)
-	// 	return
-	// }
-	// log.Printf("User logged in: %+v", user)
-
-	// responseBody := models.UserLoginResponse{
-	// 	ID:       user.ID,
-	// 	Username: user.Username,
-	// 	Email:    user.Email,
-	// }
-	// ctx.JSON(200, responseBody)
+	response, err := r.UserService.Login(ctx, body)
+	if err != nil {
+		ctx.JSON(400, models.ErrorResponse{Error: err.Error()})
+		log.Panic(err)
+		return
+	}
+	ctx.JSON(200, response)
 }
 
 // @title User API
@@ -87,7 +89,7 @@ func (r *UserRouter) Register(ctx *gin.Context) {
 		return
 	}
 
-	user, err := r.UserService.Register(ctx, *body)
+	user, err := r.UserService.Register(ctx, body)
 	if err != nil {
 		ctx.JSON(400, models.ErrorResponse{Error: err.Error()})
 		log.Panic(err)

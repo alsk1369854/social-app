@@ -63,6 +63,9 @@ go get gorm.io/driver/sqlite
 go get github.com/swaggo/files
 go get github.com/swaggo/gin-swagger
 
+# jwt
+go get github.com/golang-jwt/jwt/v5
+
 # other
 go get github.com/pkg/errors
 go get github.com/google/uuid
