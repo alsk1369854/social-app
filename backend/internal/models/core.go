@@ -3,7 +3,9 @@ package models
 import "github.com/google/uuid"
 
 type TableModel struct {
-	ID uuid.UUID `gorm:"primaryKey"`
+	ID        uuid.UUID `gorm:"primaryKey" json:"id"`
+	CreatedAt int64     `gorm:"autoCreateTime" json:"createdAt"`
+	UpdatedAt int64     `gorm:"autoUpdateTime" json:"updatedAt"`
 }
 
 type JWTClaimsData struct {

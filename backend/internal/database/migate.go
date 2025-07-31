@@ -15,6 +15,9 @@ func Migrate(db *gorm.DB) error {
 		&models.City{},
 		&models.Address{},
 		&models.User{},
+		&models.Post{},
+		&models.Comment{},
+		&models.Like{},
 	); err != nil {
 		return err
 	}

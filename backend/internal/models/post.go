@@ -8,10 +8,8 @@ type Post struct {
 }
 
 type PostBase struct {
-	AuthorID  uuid.UUID `gorm:"not null"`
-	Author    *User     `gorm:"foreignKey:AuthorID"`
-	ImageURL  *string   `gorm:"default:null"`
-	Content   string    `gorm:"not null"`
-	CreatedAt int64     `gorm:"autoCreateTime"`
-	UpdatedAt int64     `gorm:"autoUpdateTime"`
+	AuthorID uuid.UUID `gorm:"not null"`
+	Author   *User     `gorm:"foreignKey:AuthorID"`
+	ImageURL *string   `gorm:"default:null"`
+	Content  string    `gorm:"not null"`
 }
