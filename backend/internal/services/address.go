@@ -33,6 +33,13 @@ func (s *AddressService) Create(ctx *gin.Context, addressBaseSlice []models.Addr
 	return s.AddressRepository.Create(ctx, addressBaseSlice)
 }
 
-func (s *AddressService) DeleteByID(ctx *gin.Context, addressID uuid.UUID) error {
-	return s.AddressRepository.DeleteByID(ctx, addressID)
+func (s *AddressService) DeleteByID(ctx *gin.Context, addressID uuid.UUID) (*models.Address, error) {
+	address, err := s.GetByID(ctx, addressID)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.AddressRepository.DeleteByID(ctx, addressID); err != nil {
+		return nil, err
+	}
+	return address, nil
 }

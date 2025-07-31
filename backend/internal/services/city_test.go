@@ -10,58 +10,71 @@ import (
 	"gorm.io/gorm"
 )
 
-func TestNewCityService(t *testing.T) {
+func TestCityService(t *testing.T) {
+	repo := NewCityService()
+	ctx, _, cleanup := tests.SetupTestContext("test_city_service.db")
+	defer cleanup()
+
 	t.Run("單例模式測試", func(t *testing.T) {
-		repo1 := NewCityService()
 		repo2 := NewCityService()
-
-		assert.Same(t, repo1, repo2, "應該返回相同的實例")
-		assert.NotNil(t, repo1, "實例不應該為 nil")
-	})
-}
-
-func TestCityServiceGetByID(t *testing.T) {
-	ctx, cleanup := tests.SetupTestContext()
-	defer cleanup()
-
-	t.Run("成功找到城市", func(t *testing.T) {
-		repo := NewCityService()
-
-		citySlice, err := repo.Create(ctx, []models.CityBase{{Name: "台北市"}})
-		assert.NoError(t, err)
-		expectedCity := citySlice[0]
-
-		city, err := repo.GetByID(ctx, expectedCity.ID)
-		assert.NoError(t, err)
-		assert.NotNil(t, city)
-		assert.Equal(t, expectedCity.ID, city.ID)
-		assert.Equal(t, expectedCity.Name, city.Name)
+		assert.Same(t, repo, repo2, "應該返回相同的實例")
+		assert.NotNil(t, repo, "實例不應該為 nil")
 	})
 
-	t.Run("城市不存在", func(t *testing.T) {
-		repo := NewCityService()
-		city, err := repo.GetByID(ctx, uuid.New())
+	t.Run("Create", func(t *testing.T) {
+		t.Run("成功創建城市", func(t *testing.T) {
+			cityBaseSlice := []models.CityBase{
+				{Name: "city1"},
+				{Name: "city2"},
+			}
+			cities, err := repo.Create(ctx, cityBaseSlice)
+			assert.NoError(t, err)
+			assert.Len(t, cities, 2)
+			assert.Equal(t, "city1", cities[0].Name)
+			assert.Equal(t, "city2", cities[1].Name)
+		})
 
-		assert.Error(t, err)
-		assert.Nil(t, city)
-		assert.Equal(t, gorm.ErrRecordNotFound, err)
+		t.Run("創建城市失敗 - 名稱重複", func(t *testing.T) {
+			cityBase := models.CityBase{Name: "city3"}
+			repo.Create(ctx, []models.CityBase{cityBase})
+			_, err := repo.Create(ctx, []models.CityBase{cityBase})
+			assert.Error(t, err)
+		})
 	})
-}
 
-func TestCityServiceGetAll(t *testing.T) {
-	ctx, cleanup := tests.SetupTestContext()
-	defer cleanup()
+	t.Run("GetByID", func(*testing.T) {
+		t.Run("成功找到城市", func(t *testing.T) {
+			citySlice, err := repo.Create(ctx, []models.CityBase{{Name: "city-getbyid-1"}})
+			assert.NotNil(t, citySlice)
+			assert.NoError(t, err)
 
-	t.Run("成功獲取所有城市", func(t *testing.T) {
+			expectedCity := citySlice[0]
+			city, err := repo.GetByID(ctx, expectedCity.ID)
+			assert.NoError(t, err)
+			assert.NotNil(t, city)
+			assert.Equal(t, expectedCity.ID, city.ID)
+			assert.Equal(t, expectedCity.Name, city.Name)
+		})
 
-		repo := NewCityService()
-		cities, err := repo.GetAll(ctx)
-
-		assert.NoError(t, err)
-		assert.NotNil(t, cities)
-		assert.Greater(t, len(cities), 0, "應該有城市資料")
-		for _, city := range cities {
-			assert.NotEmpty(t, city.Name, "城市名稱不應該為空")
-		}
+		t.Run("城市不存在", func(t *testing.T) {
+			city, err := repo.GetByID(ctx, uuid.New())
+			assert.Nil(t, city)
+			assert.Error(t, err)
+			assert.Equal(t, gorm.ErrRecordNotFound, err)
+		})
 	})
+
+	t.Run("GetAll", func(t *testing.T) {
+		t.Run("成功獲取所有城市", func(t *testing.T) {
+			cities, err := repo.GetAll(ctx)
+
+			assert.NoError(t, err)
+			assert.NotNil(t, cities)
+			assert.Greater(t, len(cities), 0, "應該有城市資料")
+			for _, city := range cities {
+				assert.NotEmpty(t, city.Name, "城市名稱不應該為空")
+			}
+		})
+	})
+
 }

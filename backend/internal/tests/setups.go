@@ -5,41 +5,43 @@ import (
 	"backend/internal/middlewares"
 	"backend/internal/servers"
 	"net/http/httptest"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
-func SetupTestDB() (*gorm.DB, func()) {
+func SetupTestDB(dbFile string) (*gorm.DB, func()) {
+	os.Remove(dbFile)
 	db := database.SetupSQLite(&database.SQLiteConfig{
-		DBFile:    ":memory:",
+		DBFile:    dbFile, // ":memery:"
 		EnableLog: false,
 	})
 
 	cleanup := func() {
-		// os.Remove("./test.db")
+		os.Remove(dbFile)
 	}
 
 	return db, cleanup
 }
 
-func SetupTestContext() (*gin.Context, func()) {
-	db, cleanup := SetupTestDB()
+func SetupTestContext(dbFile string) (*gin.Context, *gorm.DB, func()) {
+	db, cleanup := SetupTestDB(dbFile)
 
 	gin.SetMode(gin.TestMode)
 	ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
 	ctx.Set(middlewares.CONTEXT_KEY_GORM_DB, db)
 
-	return ctx, cleanup
+	return ctx, db, cleanup
 }
 
-func SetupTestServer() (*gin.Engine, *gin.RouterGroup, func()) {
-	db, cleanup := SetupTestDB()
+func SetupTestServer(dbFile string) (*gin.Engine, *gin.RouterGroup, *gin.Context, *gorm.DB, func()) {
+	ctx, db, cleanup := SetupTestContext(dbFile)
 
-	gin.SetMode(gin.ReleaseMode)
+	gin.SetMode(gin.TestMode)
 	server, apiRouter := servers.SetupGin(&servers.GinConfig{
 		DB: db,
 	})
 
-	return server, apiRouter, cleanup
+	return server, apiRouter, ctx, db, cleanup
 }

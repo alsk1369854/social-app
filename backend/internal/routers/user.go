@@ -49,8 +49,16 @@ func (r *UserRouter) Bind(_router *gin.RouterGroup) {
 func (r *UserRouter) Register(ctx *gin.Context) {
 	body := &models.UserRegisterRequest{}
 	if err := ctx.ShouldBindJSON(body); err != nil {
-		ctx.JSON(400, models.ErrorResponse{Error: "Invalid request body"})
+		ctx.JSON(400, models.ErrorResponse{Error: "invalid request body"})
 		log.Panic(err)
+		return
+	}
+
+	// Validate password length
+	passwordLen := len(body.Password)
+	if passwordLen < 6 || passwordLen > 12 {
+		ctx.JSON(400, models.ErrorResponse{Error: "password length must be between 6 and 12 characters"})
+		log.Panic("Password length is invalid")
 		return
 	}
 
@@ -60,8 +68,10 @@ func (r *UserRouter) Register(ctx *gin.Context) {
 		log.Panic(err)
 		return
 	}
+	log.Printf("User registered: %+v", user)
 
 	responseBody := models.UserRegisterResponse{
+		ID:       user.ID,
 		Username: user.Username,
 		Email:    user.Email,
 		Age:      user.Age,
@@ -69,7 +79,7 @@ func (r *UserRouter) Register(ctx *gin.Context) {
 	}
 	if user.Address != nil {
 		responseBody.Address = &models.UserRegisterResponseAddress{
-			CityID: user.Address.CityID.String(),
+			CityID: user.Address.CityID,
 			Street: user.Address.Street,
 		}
 	}

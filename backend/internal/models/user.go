@@ -8,28 +8,29 @@ type User struct {
 }
 
 type UserBase struct {
-	Username     string
-	Email        string
-	PasswordHash string
-	Age          *int64
-	AddressID    *uuid.UUID
-	Address      *Address `gorm:"foreignKey:AddressID"`
+	Username       string `gorm:"uniqueIndex;not null"`
+	Email          string `gorm:"uniqueIndex;not null"`
+	HashedPassword string `gorm:"not null"`
+	Age            *int64
+	AddressID      *uuid.UUID
+	Address        *Address `gorm:"foreignKey:AddressID"`
 }
 
 type UserRegisterRequest struct {
 	Username string                      `json:"username" binding:"required"`
 	Email    string                      `json:"email" binding:"required"`
-	Password string                      `json:"password" binding:"required,min=6,max=12"`
+	Password string                      `json:"password" binding:"required"`
 	Age      *int64                      `json:"age"`
 	Address  *UserRegisterRequestAddress `json:"address"`
 }
 
 type UserRegisterRequestAddress struct {
-	CityID string `json:"cityID" binding:"required"`
-	Street string `json:"street" binding:"required"`
+	CityID uuid.UUID `json:"cityID" binding:"required"`
+	Street string    `json:"street" binding:"required"`
 }
 
 type UserRegisterResponse struct {
+	ID       uuid.UUID                    `json:"id"`
 	Username string                       `json:"username"`
 	Email    string                       `json:"email"`
 	Age      *int64                       `json:"age"`
@@ -37,6 +38,6 @@ type UserRegisterResponse struct {
 }
 
 type UserRegisterResponseAddress struct {
-	CityID string `json:"cityID"`
-	Street string `json:"street"`
+	CityID uuid.UUID `json:"cityID"`
+	Street string    `json:"street"`
 }

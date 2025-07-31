@@ -2,6 +2,7 @@ package services
 
 import (
 	"backend/internal/models"
+	"backend/internal/pkg"
 	"backend/internal/repositories"
 	"errors"
 	"sync"
@@ -35,18 +36,32 @@ func (s *UserService) GetByID(ctx *gin.Context, userID uuid.UUID) (*models.User,
 	return s.UserRepository.GetByID(ctx, userID)
 }
 
+func (s *UserService) GetByUsername(ctx *gin.Context, username string) (*models.User, error) {
+	return s.UserRepository.GetByUsername(ctx, username)
+}
+
+func (s *UserService) GetByEmail(ctx *gin.Context, email string) (*models.User, error) {
+	return s.UserRepository.GetByEmail(ctx, email)
+}
+
 func (s *UserService) Register(ctx *gin.Context, userData models.UserRegisterRequest) (*models.User, error) {
+
+	// 檢查 email 是否存在
+	if _, err := s.GetByEmail(ctx, userData.Email); err == nil {
+		return nil, errors.New("email already exists")
+	}
+	// 檢查 username 是否存在
+	if _, err := s.GetByUsername(ctx, userData.Username); err == nil {
+		return nil, errors.New("username already exists")
+	}
+	// 檢查是否有填寫 address
 	var addressID *uuid.UUID
 	if userData.Address != nil {
-		cityID, err := uuid.Parse(userData.Address.CityID)
-		if err != nil {
-			return nil, errors.New("invalid city ID")
-		}
-		if _, err := s.CityService.GetByID(ctx, cityID); err != nil {
+		if _, err := s.CityService.GetByID(ctx, userData.Address.CityID); err != nil {
 			return nil, errors.New("city not found")
 		}
 		addressSlice, err := s.AddressService.Create(ctx, []models.AddressBase{{
-			CityID: cityID,
+			CityID: userData.Address.CityID,
 			Street: userData.Address.Street,
 		}})
 		if err != nil {
@@ -54,21 +69,31 @@ func (s *UserService) Register(ctx *gin.Context, userData models.UserRegisterReq
 		}
 		addressID = &(addressSlice[0].ID)
 	}
-
-	passwordHash := userData.Password // Assume password hashing is done here
+	// 建立 User 資料
+	cryptoUtils := pkg.NewCryptoUtils()
+	HashedPassword := cryptoUtils.Hash256Password(userData.Email, userData.Username, userData.Password)
 	userBase := models.UserBase{
-		Username:     userData.Username,
-		Email:        userData.Email,
-		PasswordHash: passwordHash,
-		Age:          userData.Age,
-		AddressID:    addressID,
+		Username:       userData.Username,
+		Email:          userData.Email,
+		HashedPassword: HashedPassword,
+		Age:            userData.Age,
+		AddressID:      addressID,
 	}
-
-	userSlice, err := s.UserRepository.Create(ctx, []models.UserBase{userBase})
+	users, err := s.UserRepository.Create(ctx, []models.UserBase{userBase})
 	if err != nil {
 		return nil, err
 	}
-	return &userSlice[0], nil
+
+	// 載入地址資訊
+	result := &users[0]
+	if addressID != nil {
+		address, err := s.AddressService.GetByID(ctx, *addressID)
+		if err != nil {
+			return nil, err
+		}
+		result.Address = address
+	}
+	return result, nil
 }
 
 func (s *UserService) Create(ctx *gin.Context, userBaseSlice []models.UserBase) ([]models.User, error) {

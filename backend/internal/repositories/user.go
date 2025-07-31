@@ -34,6 +34,28 @@ func (r *UserRepository) GetByID(ctx *gin.Context, userID uuid.UUID) (*models.Us
 	return user, nil
 }
 
+func (r *UserRepository) GetByUsername(ctx *gin.Context, username string) (*models.User, error) {
+	db := ctx.MustGet(middlewares.CONTEXT_KEY_GORM_DB).(*gorm.DB)
+	user := &models.User{}
+	if err := db.Model(user).
+		Where(&models.User{UserBase: models.UserBase{Username: username}}).
+		First(user).Error; err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (r *UserRepository) GetByEmail(ctx *gin.Context, email string) (*models.User, error) {
+	db := ctx.MustGet(middlewares.CONTEXT_KEY_GORM_DB).(*gorm.DB)
+	user := &models.User{}
+	if err := db.Model(user).
+		Where(&models.User{UserBase: models.UserBase{Email: email}}).
+		First(user).Error; err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
 func (r *UserRepository) Create(ctx *gin.Context, userBaseSlice []models.UserBase) ([]models.User, error) {
 	db := ctx.MustGet(middlewares.CONTEXT_KEY_GORM_DB).(*gorm.DB)
 

@@ -124,9 +124,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "password": {
-                    "type": "string",
-                    "maxLength": 12,
-                    "minLength": 6
+                    "type": "string"
                 },
                 "username": {
                     "type": "string"
@@ -158,6 +156,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "email": {
+                    "type": "string"
+                },
+                "id": {
                     "type": "string"
                 },
                 "username": {

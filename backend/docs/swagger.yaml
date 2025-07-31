@@ -20,8 +20,6 @@ definitions:
       email:
         type: string
       password:
-        maxLength: 12
-        minLength: 6
         type: string
       username:
         type: string
@@ -47,6 +45,8 @@ definitions:
       age:
         type: integer
       email:
+        type: string
+      id:
         type: string
       username:
         type: string

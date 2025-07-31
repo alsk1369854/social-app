@@ -8,7 +8,7 @@ type City struct {
 }
 
 type CityBase struct {
-	Name string
+	Name string `gorm:"uniqueIndex;not null"`
 }
 
 type CityGetAllResponse []CityGetAllResponseItem
