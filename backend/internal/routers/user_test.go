@@ -21,6 +21,56 @@ func TestUserRouter(t *testing.T) {
 	userRouter.Bind(apiRouter)
 
 	t.Run("Login", func(t *testing.T) {
+		t.Run("登入失敗 - 電子郵件用戶不存在", func(t *testing.T) {
+			body := &models.UserLoginRequest{
+				Email:    pkg.GetRandomString(5),
+				Password: "passwerd123",
+			}
+			buf, _ := httpUtils.ToJSONBuffer(body)
+			req, _ := http.NewRequest("POST", "/api/user/login", buf)
+			req.Header.Set("Content-Type", "application/json")
+			recorder := httptest.NewRecorder()
+			server.ServeHTTP(recorder, req)
+
+			response := &models.ErrorResponse{}
+			err := json.Unmarshal(recorder.Body.Bytes(), response)
+			assert.NoError(t, err, "Response should be valid JSON")
+			assert.Equal(t, 400, recorder.Code, "應該回傳 400 表示登入失敗")
+			assert.Equal(t, "email not found", response.Error, "Error message should match")
+		})
+
+		t.Run("登入失敗 - 密碼錯誤", func(t *testing.T) {
+			// 1. 創建一個新用戶
+			username := pkg.GetRandomString(5)
+			payload := models.UserRegisterRequest{
+				Username: username,
+				Email:    username + "@example.com",
+				Password: "password123",
+			}
+			buf, _ := httpUtils.ToJSONBuffer(payload)
+			req, _ := http.NewRequest("POST", "/api/user/register", buf)
+			req.Header.Set("Content-Type", "application/json")
+			recorder := httptest.NewRecorder()
+			server.ServeHTTP(recorder, req)
+			assert.Equal(t, 200, recorder.Code, "應該回傳 200 表示註冊成功")
+
+			// 2. 嘗試使用錯誤的密碼登入
+			loginPayload := models.UserLoginRequest{
+				Email:    payload.Email,
+				Password: "wrongpassword",
+			}
+			loginBuf, _ := httpUtils.ToJSONBuffer(loginPayload)
+			loginReq, _ := http.NewRequest("POST", "/api/user/login", loginBuf)
+			loginReq.Header.Set("Content-Type", "application/json")
+			loginRecorder := httptest.NewRecorder()
+			server.ServeHTTP(loginRecorder, loginReq)
+			assert.Equal(t, 400, loginRecorder.Code, "應該回傳 400 表示登入失敗")
+			response := &models.ErrorResponse{}
+			err := json.Unmarshal(loginRecorder.Body.Bytes(), response)
+			assert.NoError(t, err, "Response should be valid JSON")
+			assert.Equal(t, "incorrect email or password", response.Error)
+		})
+
 		t.Run("成功登入", func(t *testing.T) {
 			// 1. 創建一個新用戶
 			username := pkg.GetRandomString(5)
@@ -34,8 +84,9 @@ func TestUserRouter(t *testing.T) {
 			req.Header.Set("Content-Type", "application/json")
 			recorder := httptest.NewRecorder()
 			server.ServeHTTP(recorder, req)
+			assert.Equal(t, 200, recorder.Code, "應該回傳 200 表示註冊成功")
 
-			// 2. 登入該用戶
+			// 2. 嘗試登入
 			loginPayload := models.UserLoginRequest{
 				Email:    payload.Email,
 				Password: payload.Password,
@@ -45,16 +96,14 @@ func TestUserRouter(t *testing.T) {
 			loginReq.Header.Set("Content-Type", "application/json")
 			loginRecorder := httptest.NewRecorder()
 			server.ServeHTTP(loginRecorder, loginReq)
-
-			loginResponse := &models.UserLoginResponse{}
-			err := json.Unmarshal(loginRecorder.Body.Bytes(), loginResponse)
+			assert.Equal(t, 200, loginRecorder.Code, "應該回傳 200 表示登入成功")
+			response := &models.UserLoginResponse{}
+			err := json.Unmarshal(loginRecorder.Body.Bytes(), response)
 			assert.NoError(t, err, "Response should be valid JSON")
-
-			assert.Equal(t, 200, loginRecorder.Code)
-			assert.NotEmpty(t, loginResponse.AccessToken, "Token should not be empty")
-			assert.Equal(t, loginResponse.Username, payload.Username)
-			assert.Equal(t, loginResponse.Email, payload.Email)
-			assert.NotEmpty(t, loginResponse.ID, "User ID should not be empty")
+			assert.NotEmpty(t, response.AccessToken, "Token should not be empty")
+			assert.Equal(t, response.Username, payload.Username)
+			assert.Equal(t, response.Email, payload.Email)
+			assert.NotEmpty(t, response.ID, "User ID should not be empty")
 		})
 
 		t.Run("登入失敗 - 錯誤的電子郵件或密碼", func(t *testing.T) {

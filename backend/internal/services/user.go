@@ -4,7 +4,6 @@ import (
 	"backend/internal/models"
 	"backend/internal/pkg"
 	"backend/internal/repositories"
-	"os"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -108,41 +107,4 @@ func (s *UserService) Register(ctx *gin.Context, userData *models.UserRegisterRe
 		result.Address = address
 	}
 	return result, nil
-}
-
-func (s *UserService) Login(ctx *gin.Context, userData *models.UserLoginRequest) (*models.UserLoginResponse, error) {
-	user, err := s.GetByEmail(ctx, userData.Email)
-	if err != nil {
-		return nil, errors.New("user not found")
-	}
-
-	// 驗證密碼
-	cryptoUtils := pkg.NewCryptoUtils()
-	passwordVerified := cryptoUtils.VerifyPasswordHash(user.HashedPassword, &pkg.CryptoUtilsPasswordHashInput{
-		Email:    user.Email,
-		Username: user.Username,
-		Password: userData.Password,
-	})
-	if !passwordVerified {
-		return nil, errors.New("invalid password")
-	}
-
-	// 生成 JWT Token
-	jwtUtils := pkg.NewJWTUtils()
-	accessToken, err := jwtUtils.GenerateToken(
-		&models.JWTClaimsData{UserID: user.ID},
-		os.Getenv(jwtUtils.DefaultEnvKey),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	// 構建回應
-	response := &models.UserLoginResponse{
-		ID:          user.ID,
-		Username:    user.Username,
-		Email:       user.Email,
-		AccessToken: accessToken,
-	}
-	return response, nil
 }

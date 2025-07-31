@@ -2,8 +2,10 @@ package routers
 
 import (
 	"backend/internal/models"
+	"backend/internal/pkg"
 	"backend/internal/services"
 	"log"
+	"os"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -46,6 +48,7 @@ func (r *UserRouter) Bind(_router *gin.RouterGroup) {
 // @Param user body models.UserLoginRequest true "User login request"
 // @Success 200 {object} models.UserLoginResponse
 // @Failure 400 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
 // @Router /api/user/login [post]
 func (r *UserRouter) Login(ctx *gin.Context) {
 	body := &models.UserLoginRequest{}
@@ -55,11 +58,44 @@ func (r *UserRouter) Login(ctx *gin.Context) {
 		return
 	}
 
-	response, err := r.UserService.Login(ctx, body)
+	// 檢查使用者是否存在
+	user, err := r.UserService.GetByEmail(ctx, body.Email)
 	if err != nil {
-		ctx.JSON(400, models.ErrorResponse{Error: err.Error()})
+		ctx.JSON(400, models.ErrorResponse{Error: "email not found"})
 		log.Panic(err)
 		return
+	}
+
+	// 驗證密碼
+	cryptoUtils := pkg.NewCryptoUtils()
+	isValid := cryptoUtils.VerifyPasswordHash(user.HashedPassword, &pkg.CryptoUtilsPasswordHashInput{
+		Email:    user.Email,
+		Username: user.Username,
+		Password: body.Password,
+	})
+	if !isValid {
+		ctx.JSON(400, models.ErrorResponse{Error: "incorrect email or password"})
+		return
+	}
+
+	// 生成 JWT Token
+	jwtUtils := pkg.NewJWTUtils()
+	accessToken, err := jwtUtils.GenerateToken(
+		&models.JWTClaimsData{UserID: user.ID},
+		os.Getenv(jwtUtils.DefaultEnvKey),
+	)
+	if err != nil {
+		ctx.JSON(500, models.ErrorResponse{Error: "failed to generate access token"})
+		log.Panic(err)
+		return
+	}
+
+	// 構建回應
+	response := &models.UserLoginResponse{
+		ID:          user.ID,
+		Username:    user.Username,
+		Email:       user.Email,
+		AccessToken: accessToken,
 	}
 	ctx.JSON(200, response)
 }
