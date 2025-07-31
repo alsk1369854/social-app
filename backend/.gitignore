@@ -34,3 +34,6 @@ go.work.sum
 
 sqlite.db
 tmp/
+
+pgadmin-data/
+postgres-data/
