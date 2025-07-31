@@ -18,6 +18,8 @@ func Migrate(db *gorm.DB) error {
 		&models.Post{},
 		&models.Comment{},
 		&models.Like{},
+		&models.Tag{},
+		&models.PostToTag{},
 	); err != nil {
 		return err
 	}
