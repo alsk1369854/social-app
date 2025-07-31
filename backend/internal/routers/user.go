@@ -34,7 +34,32 @@ func (r *UserRouter) Bind(_router *gin.RouterGroup) {
 	// POST
 	{
 		router.POST("/register", r.Register)
+		router.POST("/login", r.Login)
 	}
+}
+
+func (r *UserRouter) Login(ctx *gin.Context) {
+	// body := &models.UserLoginRequest{}
+	// if err := ctx.ShouldBindJSON(body); err != nil {
+	// 	ctx.JSON(400, models.ErrorResponse{Error: "invalid request body"})
+	// 	log.Panic(err)
+	// 	return
+	// }
+
+	// user, err := r.UserService.Login(ctx, *body)
+	// if err != nil {
+	// 	ctx.JSON(400, models.ErrorResponse{Error: err.Error()})
+	// 	log.Panic(err)
+	// 	return
+	// }
+	// log.Printf("User logged in: %+v", user)
+
+	// responseBody := models.UserLoginResponse{
+	// 	ID:       user.ID,
+	// 	Username: user.Username,
+	// 	Email:    user.Email,
+	// }
+	// ctx.JSON(200, responseBody)
 }
 
 // @title User API

@@ -41,3 +41,16 @@ type UserRegisterResponseAddress struct {
 	CityID uuid.UUID `json:"cityID"`
 	Street string    `json:"street"`
 }
+
+type UserLoginRequest struct {
+	Email    string `json:"email" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+type UserLoginResponse struct {
+	ID           uuid.UUID `json:"id"`
+	Username     string    `json:"username"`
+	Email        string    `json:"email"`
+	AccessToken  string    `json:"accessToken"`
+	RefreshToken string    `json:"refreshToken"`
+}

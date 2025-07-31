@@ -20,6 +20,34 @@ func TestUserRouter(t *testing.T) {
 	userRouter := NewUserRouter()
 	userRouter.Bind(apiRouter)
 
+	t.Run("Login", func(t *testing.T) {
+		t.Run("成功登入", func(t *testing.T) {
+			// 1. 創建一個新用戶
+			payload := models.UserRegisterRequest{
+				Username: "testuser",
+				Email:    "test@example.com",
+				Password: "password123",
+			}
+			buf, _ := httpUtils.ToJSONBuffer(payload)
+			req, _ := http.NewRequest("POST", "/api/user/register", buf)
+			req.Header.Set("Content-Type", "application/json")
+			recorder := httptest.NewRecorder()
+			server.ServeHTTP(recorder, req)
+
+			// 2. 登入該用戶
+			loginPayload := models.UserLoginRequest{
+				Email:    payload.Email,
+				Password: payload.Password,
+			}
+			loginBuf, _ := httpUtils.ToJSONBuffer(loginPayload)
+			loginReq, _ := http.NewRequest("POST", "/api/user/login", loginBuf)
+			loginReq.Header.Set("Content-Type", "application/json")
+			loginRecorder := httptest.NewRecorder()
+			server.ServeHTTP(loginRecorder, loginReq)
+		})
+
+	})
+
 	t.Run("Register", func(t *testing.T) {
 		t.Run("Successful Registration", func(t *testing.T) {
 			payload := models.UserRegisterRequest{
