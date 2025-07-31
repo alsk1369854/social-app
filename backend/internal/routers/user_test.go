@@ -23,9 +23,10 @@ func TestUserRouter(t *testing.T) {
 	t.Run("Login", func(t *testing.T) {
 		t.Run("成功登入", func(t *testing.T) {
 			// 1. 創建一個新用戶
+			username := pkg.GetRandomString(5)
 			payload := models.UserRegisterRequest{
-				Username: "testuser",
-				Email:    "test@example.com",
+				Username: username,
+				Email:    username + "@example.com",
 				Password: "password123",
 			}
 			buf, _ := httpUtils.ToJSONBuffer(payload)
@@ -44,15 +45,26 @@ func TestUserRouter(t *testing.T) {
 			loginReq.Header.Set("Content-Type", "application/json")
 			loginRecorder := httptest.NewRecorder()
 			server.ServeHTTP(loginRecorder, loginReq)
+			loginResponse := &models.UserLoginResponse{}
+			err := json.Unmarshal(loginRecorder.Body.Bytes(), loginResponse)
+			assert.NoError(t, err, "Response should be valid JSON")
+
+			assert.Equal(t, 200, loginRecorder.Code)
+			assert.NotEmpty(t, loginResponse.AccessToken, "Token should not be empty")
+			assert.NotEmpty(t, loginResponse.RefreshToken, "Refresh token should not be empty")
+			assert.Equal(t, loginResponse.Username, payload.Username)
+			assert.Equal(t, loginResponse.Email, payload.Email)
+			assert.NotEmpty(t, loginResponse.ID, "User ID should not be empty")
 		})
 
 	})
 
 	t.Run("Register", func(t *testing.T) {
-		t.Run("Successful Registration", func(t *testing.T) {
+		t.Run("成功註冊", func(t *testing.T) {
+			username := pkg.GetRandomString(5)
 			payload := models.UserRegisterRequest{
-				Username: "testuser",
-				Email:    "test@example.com",
+				Username: username,
+				Email:    username + "@example.com",
 				Password: "password123",
 			}
 			buf, _ := httpUtils.ToJSONBuffer(payload)
@@ -62,12 +74,11 @@ func TestUserRouter(t *testing.T) {
 			recorder := httptest.NewRecorder()
 			server.ServeHTTP(recorder, req)
 
-			expectedStatus := http.StatusOK
 			expectedResponse := &models.UserRegisterResponse{}
 			err := json.Unmarshal(recorder.Body.Bytes(), expectedResponse)
 
 			assert.NoError(t, err, "Response should be valid JSON")
-			assert.Equal(t, expectedStatus, recorder.Code)
+			assert.Equal(t, 200, recorder.Code)
 			assert.NotEmpty(t, expectedResponse.ID, "User ID should not be empty")
 			assert.Equal(t, expectedResponse.Username, payload.Username)
 			assert.Equal(t, expectedResponse.Email, payload.Email)
@@ -75,9 +86,10 @@ func TestUserRouter(t *testing.T) {
 
 		t.Run("註冊包含地址會員", func(t *testing.T) {
 			citySlice, _ := userRouter.CityService.GetAll(ctx)
+			username := pkg.GetRandomString(5)
 			payload := models.UserRegisterRequest{
-				Username: "testuser2",
-				Email:    "test@test.com",
+				Username: username,
+				Email:    username + "@example.com",
 				Password: "password123",
 				Address: &models.UserRegisterRequestAddress{
 					CityID: citySlice[0].ID,
@@ -104,9 +116,10 @@ func TestUserRouter(t *testing.T) {
 		})
 
 		t.Run("註冊會員 - 包含年齡", func(t *testing.T) {
+			username := pkg.GetRandomString(5)
 			payload := models.UserRegisterRequest{
-				Username: "testuser3",
-				Email:    "test3@example.com",
+				Username: username,
+				Email:    username + "@example.com",
 				Password: "password123",
 				Age:      pkg.GetPointer(int64(30)),
 			}
@@ -131,9 +144,10 @@ func TestUserRouter(t *testing.T) {
 
 		t.Run("註冊會員 - 包含地址和年齡", func(t *testing.T) {
 			citySlice, _ := userRouter.CityService.GetAll(ctx)
+			username := pkg.GetRandomString(5)
 			payload := models.UserRegisterRequest{
-				Username: "test4123",
-				Email:    "test4123@example.com",
+				Username: username,
+				Email:    username + "@example.com",
 				Password: "password123",
 				Age:      pkg.GetPointer(int64(30)),
 				Address: &models.UserRegisterRequestAddress{
@@ -163,9 +177,10 @@ func TestUserRouter(t *testing.T) {
 
 		t.Run("註冊失敗 - 重複的電子郵件", func(t *testing.T) {
 			// 準備重複的 email payload
+			username := pkg.GetRandomString(5)
 			payload := models.UserRegisterRequest{
-				Username: "existinguser",
-				Email:    "testuserasdf3@example.com",
+				Username: username,
+				Email:    username + "@example.com",
 				Password: "password123",
 			}
 
@@ -192,9 +207,10 @@ func TestUserRouter(t *testing.T) {
 
 		t.Run("重複名稱", func(t *testing.T) {
 			// 準備重複的 username payload
+			username := pkg.GetRandomString(5)
 			payload := models.UserRegisterRequest{
-				Username: "duplicate-name-testuser",
-				Email:    "duplicate-name-testuser@example.com",
+				Username: username,
+				Email:    username + "@example.com",
 				Password: "password123",
 			}
 			// === 1. 先註冊一次使用者（預期成功）===
@@ -221,9 +237,10 @@ func TestUserRouter(t *testing.T) {
 
 		t.Run("密碼長度不符合 6~12 個字元", func(t *testing.T) {
 			t.Run("少於 6 個字元", func(t *testing.T) {
+				username := pkg.GetRandomString(5)
 				payload := models.UserRegisterRequest{
-					Username: "shortpassword",
-					Email:    "shortpassword@example.com",
+					Username: username,
+					Email:    username + "@example.com",
 					Password: "123",
 				}
 
@@ -242,9 +259,10 @@ func TestUserRouter(t *testing.T) {
 			})
 
 			t.Run("超過 12 個字元", func(t *testing.T) {
+				username := pkg.GetRandomString(5)
 				payload := models.UserRegisterRequest{
-					Username: "longpassword",
-					Email:    "longpassword@example.com",
+					Username: username,
+					Email:    username + "@example.com",
 					Password: "1234567890123",
 				}
 
