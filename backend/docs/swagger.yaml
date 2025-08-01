@@ -11,6 +11,27 @@ definitions:
       error:
         type: string
     type: object
+  models.UserLoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  models.UserLoginResponse:
+    properties:
+      accessToken:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      username:
+        type: string
+    type: object
   models.UserRegisterRequest:
     properties:
       address:
@@ -84,6 +105,35 @@ paths:
       summary: Get all cities
       tags:
       - City
+  /api/user/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: User login request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserLoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Login a user
+      tags:
+      - User
   /api/user/register:
     post:
       consumes:
