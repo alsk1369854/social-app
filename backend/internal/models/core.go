@@ -12,6 +12,11 @@ type JWTClaimsData struct {
 	UserID uuid.UUID
 }
 
+type Pagination struct {
+	Offset uint
+	Limit  uint
+}
+
 type MessageResponse struct {
 	Message string `json:"message"`
 }

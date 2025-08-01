@@ -4,16 +4,20 @@ import (
 	"backend/internal/models"
 	"backend/internal/pkg"
 	"backend/internal/services"
+	"errors"
 	"log"
 	"sync"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type UserRouter struct {
 	UserService    *services.UserService
 	CityService    *services.CityService
 	AddressService *services.AddressService
+
+	CryptoUtils *pkg.CryptoUtils
 }
 
 var userOnce sync.Once
@@ -25,6 +29,8 @@ func NewUserRouter() *UserRouter {
 			UserService:    services.NewUserService(),
 			CityService:    services.NewCityService(),
 			AddressService: services.NewAddressService(),
+
+			CryptoUtils:    pkg.NewCryptoUtils(),
 		}
 	})
 	return userRouter
@@ -106,28 +112,79 @@ func (r *UserRouter) Login(ctx *gin.Context) {
 // @Failure 400 {object} models.ErrorResponse
 // @Router /api/user/register [post]
 func (r *UserRouter) Register(ctx *gin.Context) {
-	body := &models.UserRegisterRequest{}
-	if err := ctx.ShouldBindJSON(body); err != nil {
-		ctx.JSON(400, models.ErrorResponse{Error: "invalid request body"})
-		log.Panic(err)
+	reqBody := &models.UserRegisterRequest{}
+	if err := ctx.ShouldBindJSON(reqBody); err != nil {
+		ctx.JSON(400, models.ErrorResponse{Error: err.Error()})
 		return
 	}
 
 	// Validate password length
-	passwordLen := len(body.Password)
+	passwordLen := len(reqBody.Password)
 	if passwordLen < 6 || passwordLen > 12 {
 		ctx.JSON(400, models.ErrorResponse{Error: "password length must be between 6 and 12 characters"})
-		log.Panic("Password length is invalid")
 		return
 	}
 
-	user, err := r.UserService.Register(ctx, body)
-	if err != nil {
-		ctx.JSON(400, models.ErrorResponse{Error: err.Error()})
-		log.Panic(err)
+	// 檢查 email 是否存在
+	if _, err := r.UserService.GetByEmail(ctx, reqBody.Email); err == nil {
+		ctx.JSON(400, models.ErrorResponse{Error: "email already exists"})
 		return
 	}
-	log.Printf("User registered: %+v", user)
+
+	// 檢查是否有填寫 address
+	var addressID *uuid.UUID
+	if reqBody.Address != nil {
+		if _, err := r.CityService.GetByID(ctx, reqBody.Address.CityID); err != nil {
+			ctx.JSON(400, models.ErrorResponse{Error: "city not found"})
+			return
+		}
+		addressSlice, err := r.AddressService.Create(ctx, []models.AddressBase{{
+			CityID: reqBody.Address.CityID,
+			Street: reqBody.Address.Street,
+		}})
+		if err != nil {
+			ctx.JSON(400, models.ErrorResponse{Error: "invalid address data"})
+			return
+		}
+		}
+		addressID = &(addressSlice[0].ID)
+	}
+	
+	// 建立 User 資料
+	hashedPassword := r.CryptoUtils.GeneratePasswordHash(&pkg.CryptoUtilsPasswordHashInput{
+		Email:    reqBody.Email,
+		Username: reqBody.Username,
+		Password: reqBody.Password,
+	})
+	userBase := models.UserBase{
+		Username:       reqBody.Username,
+		Email:          reqBody.Email,
+		HashedPassword: hashedPassword,
+		Age:            reqBody.Age,
+		AddressID:      addressID,
+	}
+	users, err := r.UserRepository.Create(ctx, []models.UserBase{userBase})
+	if err != nil {
+		return nil, err
+	}
+
+	// 載入地址資訊
+	result := &users[0]
+	if addressID != nil {
+		address, err := s.AddressService.GetByID(ctx, *addressID)
+		if err != nil {
+			return nil, err
+		}
+		result.Address = address
+	}
+	return result, nil
+
+	// user, err := r.UserService.Register(ctx, body)
+	// if err != nil {
+	// 	ctx.JSON(400, models.ErrorResponse{Error: err.Error()})
+	// 	log.Panic(err)
+	// 	return
+	// }
 
 	responseBody := models.UserRegisterResponse{
 		ID:       user.ID,

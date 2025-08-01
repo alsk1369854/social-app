@@ -1,12 +1,14 @@
 package services
 
 import (
+	"backend/internal/middlewares"
 	"backend/internal/models"
 	"backend/internal/pkg"
 	"backend/internal/repositories"
 	"sync"
 
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -14,6 +16,8 @@ import (
 
 type UserService struct {
 	UserRepository *repositories.UserRepository
+
+	ErrorUtils *pkg.ErrorUtils
 
 	CityService    *repositories.CityRepository
 	AddressService *repositories.AddressRepository
@@ -26,6 +30,9 @@ func NewUserService() *UserService {
 	userOnce.Do(func() {
 		userService = &UserService{
 			UserRepository: repositories.NewUserRepository(),
+
+			ErrorUtils: pkg.NewErrorUtils(),
+
 			CityService:    repositories.NewCityRepository(),
 			AddressService: repositories.NewAddressRepository(),
 		}
@@ -51,6 +58,48 @@ func (s *UserService) Create(ctx *gin.Context, userBaseSlice []models.UserBase) 
 
 func (s *UserService) DeleteByID(ctx *gin.Context, userID uuid.UUID) error {
 	return s.UserRepository.DeleteByID(ctx, userID)
+}
+
+func (s *UserService) CreateUserWithAddress(ctx *gin.Context, userBase *models.UserBase, addressBase *models.AddressBase) (*models.User, error) {
+	db, err := middlewares.GetContentGORMDB(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := db.Transaction(func(tx *gorm.DB) error {
+		middlewares.SetContentGORMDB(ctx, tx)
+		defer middlewares.SetContentGORMDB(ctx, db)
+
+		// 檢查 email 是否存在
+		var addressID *uuid.UUID
+		if addressBase == nil {
+			addresses, err := s.AddressService.Create(ctx, []models.AddressBase{*addressBase})
+			if err != nil {
+				return errors.New("invalid address data")
+			}
+			addressID = &(addresses[0].ID)
+		}
+
+		return nil
+	}); err != nil {
+		return nil, s.ErrorUtils.ServerInternalError(err.Error())
+	}
+
+	// 建立地址
+	if err != nil {
+		return nil, errors.New("invalid address data")
+	}
+	addressID := &(addressSlice[0].ID)
+	userBase.AddressID = addressID
+
+	users, err := s.UserRepository.Create(ctx, []models.UserBase{*userBase})
+	if err != nil {
+		return nil, err
+	}
+
+	result := &users[0]
+	result.Address = &addressSlice[0]
+	return result, nil
 }
 
 func (s *UserService) Register(ctx *gin.Context, userData *models.UserRegisterRequest) (*models.User, error) {

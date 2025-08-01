@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"backend/internal/models"
+	"backend/internal/pkg"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -29,14 +30,15 @@ func VerifyAccessToken(validateToken func(authHeader string) (jwt.MapClaims, boo
 	}
 }
 
-func GetContentAccessTokenData(ctx *gin.Context) (jwt.MapClaims, bool) {
+func GetContentAccessTokenData(ctx *gin.Context) (jwt.MapClaims, error) {
+	errorUtils := pkg.NewErrorUtils()
 	value, exists := ctx.Get(CONTEXT_KEY_ACCESS_TOKEN_DATA)
 	if !exists {
-		return nil, false
+		return nil, errorUtils.ServerInternalError("AccessToken Data not found in context")
 	}
 	tokenData, ok := value.(jwt.MapClaims)
 	if !ok {
-		return nil, false
+		return nil, errorUtils.ServerInternalError("AccessToken Data not found in context, type assertion failed")
 	}
-	return tokenData, true
+	return tokenData, nil
 }

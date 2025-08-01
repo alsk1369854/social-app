@@ -56,11 +56,11 @@ func (r *UserRepository) GetByEmail(ctx *gin.Context, email string) (*models.Use
 	return user, nil
 }
 
-func (r *UserRepository) Create(ctx *gin.Context, userBaseSlice []models.UserBase) ([]models.User, error) {
+func (r *UserRepository) Create(ctx *gin.Context, userBases []models.UserBase) ([]models.User, error) {
 	db := ctx.MustGet(middlewares.CONTEXT_KEY_GORM_DB).(*gorm.DB)
 
-	userSlice := make([]models.User, len(userBaseSlice))
-	for i, userBase := range userBaseSlice {
+	userSlice := make([]models.User, len(userBases))
+	for i, userBase := range userBases {
 		userSlice[i] = models.User{
 			TableModel: models.TableModel{ID: uuid.New()},
 			UserBase:   userBase,

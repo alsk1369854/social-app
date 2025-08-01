@@ -16,7 +16,7 @@ type GinConfig struct {
 func SetupGin(cfg *GinConfig) (*gin.Engine, *gin.RouterGroup) {
 	server := gin.Default()
 	apiRouter := server.Group("/api")
-	apiRouter.Use(middlewares.SetGORMDB(cfg.DB))
+	apiRouter.Use(middlewares.WarpGORMDBHandler(cfg.DB))
 
 	// Add API documentation, e.g http://<user-host>/swagger/index.html
 	server.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

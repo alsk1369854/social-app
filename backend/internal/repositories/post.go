@@ -3,27 +3,36 @@ package repositories
 import (
 	"backend/internal/middlewares"
 	"backend/internal/models"
+	"backend/internal/pkg"
 	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
-type PostRepository struct{}
+type PostRepository struct {
+	errorUtils *pkg.ErrorUtils
+}
 
 var postRepositoryOnce sync.Once
 var postRepository *PostRepository
 
 func NewPostRepository() *PostRepository {
 	postRepositoryOnce.Do(func() {
-		postRepository = &PostRepository{}
+		postRepository = &PostRepository{
+			errorUtils: pkg.NewErrorUtils(),
+		}
 	})
 	return postRepository
 }
 
 func (r *PostRepository) GetPostByID(ctx *gin.Context, postID uuid.UUID) (*models.Post, error) {
-	db := ctx.MustGet(middlewares.CONTEXT_KEY_GORM_DB).(*gorm.DB)
+	db, err := middlewares.GetContentGORMDB(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	post := &models.Post{}
 	if err := db.Model(post).
 		Where(&models.Post{TableModel: models.TableModel{ID: postID}}).
@@ -31,4 +40,56 @@ func (r *PostRepository) GetPostByID(ctx *gin.Context, postID uuid.UUID) (*model
 		return nil, err
 	}
 	return post, nil
+}
+
+func (r *PostRepository) Create(ctx *gin.Context, postBases []models.PostBase) ([]models.Post, error) {
+	db, err := middlewares.GetContentGORMDB(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	posts := make([]models.Post, len(postBases))
+	for i, postBase := range postBases {
+		posts[i] = models.Post{
+			TableModel: models.TableModel{ID: uuid.New()},
+			PostBase:   postBase,
+		}
+	}
+	if err := db.Create(posts).Error; err != nil {
+		return nil, err
+	}
+
+	return posts, nil
+}
+
+func (r *PostRepository) GetPostsByAuthorID(ctx *gin.Context, AuthorID uuid.UUID, pagination *models.Pagination) ([]models.Post, uint, error) {
+	db, err := middlewares.GetContentGORMDB(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	db = db.Model(&models.Post{}).
+		Where(&models.Post{PostBase: models.PostBase{AuthorID: AuthorID}}).
+		Order(clause.OrderByColumn{
+			Column: clause.Column{Name: "created_at"},
+			Desc:   true,
+		})
+
+	totalCount := int64(0)
+	if err := db.Count(&totalCount).Error; err != nil {
+		return nil, 0, err
+	}
+
+	if pagination != nil {
+		if pagination.Limit <= 0 {
+			return nil, 0, r.errorUtils.ServerInternalError("invalid pagination parameters")
+		}
+		db = db.Offset(int(pagination.Offset)).Limit(int(pagination.Limit))
+	}
+
+	posts := []models.Post{}
+	if err := db.Find(&posts).Error; err != nil {
+		return nil, 0, r.errorUtils.ServerInternalError(err.Error())
+	}
+	return posts, uint(totalCount), nil
 }
