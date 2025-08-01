@@ -10,8 +10,19 @@
             "type": "go",
             "request": "attach",
             "mode": "remote",
+            "remotePath": "",
             "host": "127.0.0.1",
             "port": 12345,
+            "showLog": true
+        },
+        {
+            "name": "Debug 任意 Go 測試",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${fileDirname}",  // 指向當前開啟的測試檔資料夾
+            "args": ["-test.run", "."],   // 執行所有 test 函數
+            "showLog": true
         }
     ]
 }

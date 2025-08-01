@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"os"
 	"sync"
 	"time"
 
@@ -24,22 +25,28 @@ func NewJWTUtils() *JWTUtils {
 	return jwtUtils
 }
 
-func (u *JWTUtils) GenerateToken(data any, secret string) (string, error) {
+func (u *JWTUtils) GenerateToken(data any, secret []byte) (string, error) {
+	if secret == nil {
+		secret = []byte(os.Getenv(u.DefaultEnvKey))
+	}
 	claims := jwt.MapClaims{
 		"data": data,
 		"iat":  jwt.NewNumericDate(time.Now()),
 		"exp":  jwt.NewNumericDate(time.Now().Add(24 * time.Hour)), // Token valid for 24 hours
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(secret))
+	return token.SignedString(secret)
 }
 
-func (u *JWTUtils) ParseToken(tokenString string, secret string) (jwt.MapClaims, error) {
+func (u *JWTUtils) ParseToken(tokenString string, secret []byte) (jwt.MapClaims, error) {
+	if secret == nil {
+		secret = []byte(os.Getenv(u.DefaultEnvKey))
+	}
 	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("unexpected signing method")
 		}
-		return []byte(secret), nil
+		return secret, nil
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse token")

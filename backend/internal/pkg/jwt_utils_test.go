@@ -7,7 +7,7 @@ import (
 )
 
 func TestJWTUtils(t *testing.T) {
-	TEST_SECRET := "test_secret"
+	TEST_SECRET := []byte("test_secret")
 	jwtUtils := NewJWTUtils()
 
 	t.Run("Generate Token", func(t *testing.T) {

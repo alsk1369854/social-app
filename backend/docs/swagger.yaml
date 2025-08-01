@@ -11,6 +11,42 @@ definitions:
       error:
         type: string
     type: object
+  models.PostCreateRequest:
+    properties:
+      authorID:
+        type: string
+      content:
+        type: string
+      imageURL:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+    required:
+    - authorID
+    - content
+    - tags
+    type: object
+  models.PostCreateResponse:
+    properties:
+      authorID:
+        type: string
+      content:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      imageURL:
+        type: string
+      tagIDs:
+        items:
+          type: string
+        type: array
+      updatedAt:
+        type: string
+    type: object
   models.UserLoginRequest:
     properties:
       email:
@@ -105,6 +141,33 @@ paths:
       summary: Get all cities
       tags:
       - City
+  /api/post:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Post create request
+        in: body
+        name: post
+        required: true
+        schema:
+          $ref: '#/definitions/models.PostCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PostCreateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - AccessToken: []
+      summary: Create a post
+      tags:
+      - Post
   /api/user/login:
     post:
       consumes:
@@ -160,7 +223,7 @@ paths:
       tags:
       - User
 securityDefinitions:
-  bearerToken:
+  AccessToken:
     in: header
     name: Authorization
     type: apiKey

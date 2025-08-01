@@ -16,6 +16,7 @@ type UserBase struct {
 	Address        *Address `gorm:"foreignKey:AddressID"`
 }
 
+// User Register structs
 type UserRegisterRequest struct {
 	Username string                      `json:"username" binding:"required"`
 	Email    string                      `json:"email" binding:"required"`
@@ -42,6 +43,7 @@ type UserRegisterResponseAddress struct {
 	Street string    `json:"street"`
 }
 
+// User Login structs
 type UserLoginRequest struct {
 	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required"`

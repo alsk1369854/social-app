@@ -16,7 +16,7 @@ import (
 // @title Social APP API
 // @version 1.0
 // @description Social APP API
-// @securityDefinitions.apiKey bearerToken
+// @securityDefinitions.apiKey AccessToken
 // @in header
 // @name Authorization
 // @basePath /api
@@ -24,8 +24,10 @@ func main() {
 	// Command line flags for host and port
 	var host string
 	var port string
+	var debug bool
 	flag.StringVar(&host, "host", "0.0.0.0", "Host for the server")
 	flag.StringVar(&port, "port", "28080", "Port for the server")
+	flag.BoolVar(&debug, "debug", true, "Enable debug mode")
 	flag.Parse()
 
 	// Load environment variables from .env file
@@ -50,8 +52,11 @@ func main() {
 	})
 	routers.NewCityRouter().Bind(apiRouter)
 	routers.NewUserRouter().Bind(apiRouter)
+	routers.NewPostRouter().Bind(apiRouter)
 
 	// Start the server
+
+	log.Printf("Swagger docs available at http://%s:%s/swagger/index.html", host, port)
 	if err := server.Run(host + ":" + port); err != nil {
 		log.Fatal(err)
 	}

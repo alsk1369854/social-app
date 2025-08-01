@@ -6,5 +6,6 @@ type Tag struct {
 }
 
 type TagBase struct {
-	Name string `gorm:"not null;unique"`
+	Name  string  `gorm:"not null;unique"`
+	Posts []*Post `gorm:"many2many:post_to_tag;"`
 }

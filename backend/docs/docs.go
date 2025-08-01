@@ -46,6 +46,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/post": {
+            "post": {
+                "security": [
+                    {
+                        "AccessToken": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Post"
+                ],
+                "summary": "Create a post",
+                "parameters": [
+                    {
+                        "description": "Post create request",
+                        "name": "post",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.PostCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.PostCreateResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/user/login": {
             "post": {
                 "consumes": [
@@ -147,6 +191,60 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.PostCreateRequest": {
+            "type": "object",
+            "required": [
+                "authorID",
+                "content",
+                "tags"
+            ],
+            "properties": {
+                "authorID": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "imageURL": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "models.PostCreateResponse": {
+            "type": "object",
+            "properties": {
+                "authorID": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "imageURL": {
+                    "type": "string"
+                },
+                "tagIDs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "updatedAt": {
                     "type": "string"
                 }
             }
@@ -256,7 +354,7 @@ const docTemplate = `{
         }
     },
     "securityDefinitions": {
-        "bearerToken": {
+        "AccessToken": {
             "type": "apiKey",
             "name": "Authorization",
             "in": "header"

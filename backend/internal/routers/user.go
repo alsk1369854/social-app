@@ -5,7 +5,6 @@ import (
 	"backend/internal/pkg"
 	"backend/internal/services"
 	"log"
-	"os"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -80,10 +79,7 @@ func (r *UserRouter) Login(ctx *gin.Context) {
 
 	// 生成 JWT Token
 	jwtUtils := pkg.NewJWTUtils()
-	accessToken, err := jwtUtils.GenerateToken(
-		&models.JWTClaimsData{UserID: user.ID},
-		os.Getenv(jwtUtils.DefaultEnvKey),
-	)
+	accessToken, err := jwtUtils.GenerateToken(&models.JWTClaimsData{UserID: user.ID}, nil)
 	if err != nil {
 		ctx.JSON(500, models.ErrorResponse{Error: "failed to generate access token"})
 		log.Panic(err)

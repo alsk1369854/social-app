@@ -1,13 +1,17 @@
 package models
 
+import "github.com/google/uuid"
+
 type Comment struct {
 	TableModel
 	CommentBase
 }
 
 type CommentBase struct {
-	PostID   string  `gorm:"type:uuid;not null"`
-	UserID   string  `gorm:"type:uuid;not null"`
-	Content  string  `gorm:"type:text;not null"`
-	ParentID *string `gorm:"type:uuid"`
+	PostID   uuid.UUID  `gorm:"type:uuid;not null"`
+	Post     *Post      `gorm:"foreignKey:PostID"`
+	UserID   uuid.UUID  `gorm:"type:uuid;not null"`
+	User     *User      `gorm:"foreignKey:UserID"`
+	Content  string     `gorm:"type:text;not null"`
+	ParentID *uuid.UUID `gorm:"type:uuid"`
 }

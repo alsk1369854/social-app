@@ -18,9 +18,9 @@ func SetupGin(cfg *GinConfig) (*gin.Engine, *gin.RouterGroup) {
 	apiRouter := server.Group("/api")
 	apiRouter.Use(middlewares.SetGORMDB(cfg.DB))
 
-	// Add API documentation, e.g http://localhost:8080/swagger/index.html
+	// Add API documentation, e.g http://<user-host>/swagger/index.html
 	server.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	server.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	// server.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	return server, apiRouter
 }
