@@ -55,7 +55,6 @@ func createAdminUser(db *gorm.DB, email string, password string) error {
 	username := matches[extractUsernameRegex.SubexpIndex("username")]
 	hashedPassword := cryptoUtils.GeneratePasswordHash(&pkg.CryptoUtilsPasswordHashInput{
 		Email:    email,
-		Username: username,
 		Password: password,
 	})
 	adminUser := &models.User{

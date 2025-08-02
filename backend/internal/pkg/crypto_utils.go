@@ -21,12 +21,11 @@ func NewCryptoUtils() *CryptoUtils {
 
 type CryptoUtilsPasswordHashInput struct {
 	Email    string
-	Username string
 	Password string
 }
 
 func (c *CryptoUtils) GeneratePasswordHash(input *CryptoUtilsPasswordHashInput) string {
-	combined := fmt.Sprintf("%s|%s|%s", input.Email, input.Username, input.Password)
+	combined := fmt.Sprintf("%s|%s", input.Email, input.Password)
 	hash := sha256.Sum256([]byte(combined))
 	return hex.EncodeToString(hash[:])
 }

@@ -8,7 +8,7 @@ type User struct {
 }
 
 type UserBase struct {
-	Username       string `gorm:"uniqueIndex;not null"`
+	Username       string `gorm:"not null"`
 	Email          string `gorm:"uniqueIndex;not null"`
 	HashedPassword string `gorm:"not null"`
 	Age            *int64

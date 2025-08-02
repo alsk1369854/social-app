@@ -5,6 +5,7 @@ import (
 	"backend/internal/pkg"
 	"backend/internal/tests"
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -97,7 +98,9 @@ func TestUserRouter(t *testing.T) {
 			loginRecorder := httptest.NewRecorder()
 			server.ServeHTTP(loginRecorder, loginReq)
 			assert.Equal(t, 200, loginRecorder.Code, "應該回傳 200 表示登入成功")
+			// response := &models.UserLoginResponse{}
 			response := &models.UserLoginResponse{}
+			log.Println(loginRecorder.Body.String())
 			err := json.Unmarshal(loginRecorder.Body.Bytes(), response)
 			assert.NoError(t, err, "Response should be valid JSON")
 			assert.NotEmpty(t, response.AccessToken, "Token should not be empty")
@@ -267,36 +270,6 @@ func TestUserRouter(t *testing.T) {
 			err := json.Unmarshal(recorder.Body.Bytes(), &resp)
 			require.NoError(t, err, "回傳應為合法 JSON")
 			assert.Equal(t, "email already exists", resp.Error)
-		})
-
-		t.Run("重複名稱", func(t *testing.T) {
-			// 準備重複的 username payload
-			username := pkg.GetRandomString(5)
-			payload := models.UserRegisterRequest{
-				Username: username,
-				Email:    username + "@example.com",
-				Password: "password123",
-			}
-			// === 1. 先註冊一次使用者（預期成功）===
-			payloadBuf, _ := httpUtils.ToJSONBuffer(payload)
-			req, _ := http.NewRequest("POST", "/api/user/register", payloadBuf)
-			recorder := httptest.NewRecorder()
-			server.ServeHTTP(recorder, req)
-			assert.Equal(t, 200, recorder.Code, "第一次註冊應該成功")
-
-			// === 2. 再次註冊相同 username（預期失敗）===
-			payload.Email = "duplicate-name-testuser-new@example.com"
-			payloadBuf, _ = httpUtils.ToJSONBuffer(payload)
-			req, _ = http.NewRequest("POST", "/api/user/register", payloadBuf)
-			recorder = httptest.NewRecorder()
-			server.ServeHTTP(recorder, req)
-
-			assert.Equal(t, 400, recorder.Code, "應該回傳 400 表示 username 重複")
-
-			var resp models.ErrorResponse
-			err := json.Unmarshal(recorder.Body.Bytes(), &resp)
-			require.NoError(t, err, "回傳應為合法 JSON")
-			assert.Equal(t, "username already exists", resp.Error)
 		})
 
 		t.Run("密碼長度不符合 6~12 個字元", func(t *testing.T) {

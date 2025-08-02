@@ -26,7 +26,6 @@ func TestHash256Password(t *testing.T) {
 		password := "password123"
 		hashedPassword := cryptoUtils.GeneratePasswordHash(&CryptoUtilsPasswordHashInput{
 			Email:    email,
-			Username: username,
 			Password: password,
 		})
 
@@ -39,13 +38,11 @@ func TestHash256Password(t *testing.T) {
 		password := "password123"
 		hashedPassword := cryptoUtils.GeneratePasswordHash(&CryptoUtilsPasswordHashInput{
 			Email:    email,
-			Username: username,
 			Password: password,
 		})
 
 		assert.True(t, cryptoUtils.VerifyPasswordHash(hashedPassword, &CryptoUtilsPasswordHashInput{
 			Email:    email,
-			Username: username,
 			Password: password,
 		}), "Expected password to be verified successfully")
 	})
@@ -56,13 +53,11 @@ func TestHash256Password(t *testing.T) {
 		password := "password123"
 		hashedPassword := cryptoUtils.GeneratePasswordHash(&CryptoUtilsPasswordHashInput{
 			Email:    email,
-			Username: username,
 			Password: password,
 		})
 
 		assert.False(t, cryptoUtils.VerifyPasswordHash(hashedPassword, &CryptoUtilsPasswordHashInput{
 			Email:    email,
-			Username: username,
 			Password: "wrongpassword",
 		}), "Expected password verification to fail")
 	})

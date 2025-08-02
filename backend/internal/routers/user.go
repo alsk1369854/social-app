@@ -4,12 +4,10 @@ import (
 	"backend/internal/models"
 	"backend/internal/pkg"
 	"backend/internal/services"
-	"errors"
 	"log"
 	"sync"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 type UserRouter struct {
@@ -18,6 +16,7 @@ type UserRouter struct {
 	AddressService *services.AddressService
 
 	CryptoUtils *pkg.CryptoUtils
+	JWTUtils    *pkg.JWTUtils
 }
 
 var userOnce sync.Once
@@ -30,7 +29,8 @@ func NewUserRouter() *UserRouter {
 			CityService:    services.NewCityService(),
 			AddressService: services.NewAddressService(),
 
-			CryptoUtils:    pkg.NewCryptoUtils(),
+			CryptoUtils: pkg.NewCryptoUtils(),
+			JWTUtils:    pkg.NewJWTUtils(),
 		}
 	})
 	return userRouter
@@ -59,7 +59,6 @@ func (r *UserRouter) Login(ctx *gin.Context) {
 	body := &models.UserLoginRequest{}
 	if err := ctx.ShouldBindJSON(body); err != nil {
 		ctx.JSON(400, models.ErrorResponse{Error: "invalid request body"})
-		log.Panic(err)
 		return
 	}
 
@@ -67,7 +66,6 @@ func (r *UserRouter) Login(ctx *gin.Context) {
 	user, err := r.UserService.GetByEmail(ctx, body.Email)
 	if err != nil {
 		ctx.JSON(400, models.ErrorResponse{Error: "email not found"})
-		log.Panic(err)
 		return
 	}
 
@@ -75,7 +73,6 @@ func (r *UserRouter) Login(ctx *gin.Context) {
 	cryptoUtils := pkg.NewCryptoUtils()
 	isValid := cryptoUtils.VerifyPasswordHash(user.HashedPassword, &pkg.CryptoUtilsPasswordHashInput{
 		Email:    user.Email,
-		Username: user.Username,
 		Password: body.Password,
 	})
 	if !isValid {
@@ -84,8 +81,7 @@ func (r *UserRouter) Login(ctx *gin.Context) {
 	}
 
 	// 生成 JWT Token
-	jwtUtils := pkg.NewJWTUtils()
-	accessToken, err := jwtUtils.GenerateToken(&models.JWTClaimsData{UserID: user.ID}, nil)
+	accessToken, err := r.JWTUtils.GenerateToken(&models.JWTClaimsData{UserID: user.ID}, nil)
 	if err != nil {
 		ctx.JSON(500, models.ErrorResponse{Error: "failed to generate access token"})
 		log.Panic(err)
@@ -110,6 +106,7 @@ func (r *UserRouter) Login(ctx *gin.Context) {
 // @Param user body models.UserRegisterRequest true "User registration request"
 // @Success 200 {object} models.UserRegisterResponse
 // @Failure 400 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
 // @Router /api/user/register [post]
 func (r *UserRouter) Register(ctx *gin.Context) {
 	reqBody := &models.UserRegisterRequest{}
@@ -131,62 +128,37 @@ func (r *UserRouter) Register(ctx *gin.Context) {
 		return
 	}
 
-	// 檢查是否有填寫 address
-	var addressID *uuid.UUID
+	// 創建用戶與地址資料
+	userBase := &models.UserBase{
+		Username: reqBody.Username,
+		Email:    reqBody.Email,
+		Age:      reqBody.Age,
+		HashedPassword: r.CryptoUtils.GeneratePasswordHash(&pkg.CryptoUtilsPasswordHashInput{
+			Email:    reqBody.Email,
+			Password: reqBody.Password,
+		}),
+	}
+	var addressBase *models.AddressBase
 	if reqBody.Address != nil {
+		// 檢查城市是否存在
 		if _, err := r.CityService.GetByID(ctx, reqBody.Address.CityID); err != nil {
 			ctx.JSON(400, models.ErrorResponse{Error: "city not found"})
 			return
 		}
-		addressSlice, err := r.AddressService.Create(ctx, []models.AddressBase{{
+		addressBase = &models.AddressBase{
 			CityID: reqBody.Address.CityID,
 			Street: reqBody.Address.Street,
-		}})
-		if err != nil {
-			ctx.JSON(400, models.ErrorResponse{Error: "invalid address data"})
-			return
 		}
-		}
-		addressID = &(addressSlice[0].ID)
 	}
-	
-	// 建立 User 資料
-	hashedPassword := r.CryptoUtils.GeneratePasswordHash(&pkg.CryptoUtilsPasswordHashInput{
-		Email:    reqBody.Email,
-		Username: reqBody.Username,
-		Password: reqBody.Password,
-	})
-	userBase := models.UserBase{
-		Username:       reqBody.Username,
-		Email:          reqBody.Email,
-		HashedPassword: hashedPassword,
-		Age:            reqBody.Age,
-		AddressID:      addressID,
-	}
-	users, err := r.UserRepository.Create(ctx, []models.UserBase{userBase})
+	user, err := r.UserService.CreateUserWithAddress(ctx, userBase, addressBase)
 	if err != nil {
-		return nil, err
+		ctx.JSON(500, models.ErrorResponse{Error: "server internal error"})
+		log.Panic(err)
+		return
 	}
 
-	// 載入地址資訊
-	result := &users[0]
-	if addressID != nil {
-		address, err := s.AddressService.GetByID(ctx, *addressID)
-		if err != nil {
-			return nil, err
-		}
-		result.Address = address
-	}
-	return result, nil
-
-	// user, err := r.UserService.Register(ctx, body)
-	// if err != nil {
-	// 	ctx.JSON(400, models.ErrorResponse{Error: err.Error()})
-	// 	log.Panic(err)
-	// 	return
-	// }
-
-	responseBody := models.UserRegisterResponse{
+	// 建立響應數據
+	respBody := models.UserRegisterResponse{
 		ID:       user.ID,
 		Username: user.Username,
 		Email:    user.Email,
@@ -194,10 +166,10 @@ func (r *UserRouter) Register(ctx *gin.Context) {
 		Address:  nil,
 	}
 	if user.Address != nil {
-		responseBody.Address = &models.UserRegisterResponseAddress{
+		respBody.Address = &models.UserRegisterResponseAddress{
 			CityID: user.Address.CityID,
 			Street: user.Address.Street,
 		}
 	}
-	ctx.JSON(200, responseBody)
+	ctx.JSON(200, respBody)
 }
