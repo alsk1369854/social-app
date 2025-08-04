@@ -56,10 +56,22 @@ func (r *PostRouter) Bind(_router *gin.RouterGroup) {
 			r.CreatePost,
 		)
 	}
-
 	// GET
 	{
 		router.GET("/author/:authorID/offset/:offset/limit/:limit", r.GetPostsByAuthorID)
+	}
+	//PUT
+	{
+		router.PUT("/like/:postID",
+			middlewares.VerifyAccessToken(func(authHeader string) (jwt.MapClaims, bool) {
+				claims, err := r.JWTUtils.ParseToken(authHeader, nil)
+				if err != nil {
+					return nil, false
+				}
+				return claims, true
+			}),
+			r.PostService.LikePost,
+		)
 	}
 }
 
@@ -96,7 +108,7 @@ func (r *PostRouter) GetPostsByAuthorID(ctx *gin.Context) {
 	// 檢查用戶是否存在
 	user, err := r.UserService.GetByID(ctx, authorID)
 	if err != nil {
-		ctx.JSON(400, models.ErrorResponse{Error: "author not found"})
+		ctx.JSON(404, models.ErrorResponse{Error: "author not found"})
 		return
 	}
 	// 獲取用戶的貼文

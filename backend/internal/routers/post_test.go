@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -57,6 +58,18 @@ func TestPostRouter(t *testing.T) {
 	assert.NotEmpty(t, respLoginBody.AccessToken, "Access token should not be empty")
 
 	t.Run("獲取作者 Posts", func(t *testing.T) {
+
+		t.Run("失敗 - 使用者不存在", func(t *testing.T) {
+			authorID := uuid.New().String()
+			reqGetPostsByAuthorID, _ := http.NewRequest("GET", "/api/post/author/"+authorID+"/offset/0/limit/10", nil)
+			recorderGetPostsByAuthorID := httptest.NewRecorder()
+			server.ServeHTTP(recorderGetPostsByAuthorID, reqGetPostsByAuthorID)
+			assert.Equal(t, 404, recorderGetPostsByAuthorID.Code, "應該回傳 404 表示使用者不存在")
+			respGetPostsByAuthorIDBody := &models.ErrorResponse{}
+			err := json.Unmarshal(recorderGetPostsByAuthorID.Body.Bytes(), respGetPostsByAuthorIDBody)
+			assert.NoError(t, err, "Response should be valid JSON")
+			assert.Equal(t, "author not found", respGetPostsByAuthorIDBody.Error, "Error message should match")
+		})
 
 		t.Run("成功獲取 Posts", func(t *testing.T) {
 			// 新增一個 Post 以便後續測試
