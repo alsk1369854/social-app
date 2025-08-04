@@ -7,8 +7,6 @@ import (
 	"backend/internal/repositories"
 	"sync"
 
-	"gorm.io/gorm"
-
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -58,7 +56,7 @@ func (s *UserService) DeleteByID(ctx *gin.Context, userID uuid.UUID) error {
 func (s *UserService) CreateUserWithAddress(ctx *gin.Context, userBase *models.UserBase, addressBase *models.AddressBase) (*models.User, error) {
 
 	var user *models.User
-	if err := middlewares.TransactionGORMDB(ctx, func(db *gorm.DB) error {
+	if err := middlewares.TransactionGORMDB(ctx, func() error {
 		// 如果有提供地址資訊，則建立地址
 		var address *models.Address
 		if addressBase != nil {

@@ -14,6 +14,7 @@ type UserBase struct {
 	Age            *int64
 	AddressID      *uuid.UUID
 	Address        *Address `gorm:"foreignKey:AddressID"`
+	Likes          []*Post  `gorm:"many2many:post_to_user;"`
 }
 
 // User Register structs

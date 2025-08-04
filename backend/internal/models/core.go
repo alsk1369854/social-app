@@ -17,6 +17,12 @@ type Pagination struct {
 	Limit  uint
 }
 
+type PaginationResponse[T any] struct {
+	Data       []T         `json:"data"`
+	TotalCount uint        `json:"totalCount"`
+	Pagination *Pagination `json:"pagination"`
+}
+
 type MessageResponse struct {
 	Message string `json:"message"`
 }

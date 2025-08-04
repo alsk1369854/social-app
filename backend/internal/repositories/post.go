@@ -42,12 +42,17 @@ func (r *PostRepository) GetPostByID(ctx *gin.Context, postID uuid.UUID) (*model
 	return post, nil
 }
 
-func (r *PostRepository) Create(ctx *gin.Context, postBases []models.PostBase) ([]models.Post, error) {
+func (r *PostRepository) Create(ctx *gin.Context, postBases []models.PostBase, tags [][]models.Tag) ([]models.Post, error) {
+	if len(postBases) != len(tags) {
+		return nil, r.errorUtils.ServerInternalError("postBases and tags length mismatch")
+	}
+
 	db, err := middlewares.GetContentGORMDB(ctx)
 	if err != nil {
 		return nil, err
 	}
 
+	// Create posts
 	posts := make([]models.Post, len(postBases))
 	for i, postBase := range postBases {
 		posts[i] = models.Post{
@@ -59,6 +64,16 @@ func (r *PostRepository) Create(ctx *gin.Context, postBases []models.PostBase) (
 		return nil, err
 	}
 
+	// Associate tags with posts
+	for i, post := range posts {
+		if err := db.Model(&post).Association("Tags").Append(tags[i]); err != nil {
+			return nil, err
+		}
+	}
+
+	if err := db.Model(&models.Post{}).Preload("Tags").Find(&posts).Error; err != nil {
+		return nil, err
+	}
 	return posts, nil
 }
 
@@ -70,6 +85,8 @@ func (r *PostRepository) GetPostsByAuthorID(ctx *gin.Context, AuthorID uuid.UUID
 
 	db = db.Model(&models.Post{}).
 		Where(&models.Post{PostBase: models.PostBase{AuthorID: AuthorID}}).
+		Preload("Tags").
+		Preload("Likes").
 		Order(clause.OrderByColumn{
 			Column: clause.Column{Name: "created_at"},
 			Desc:   true,

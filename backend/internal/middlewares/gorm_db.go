@@ -32,7 +32,7 @@ func SetContentGORMDB(ctx *gin.Context, db *gorm.DB) {
 	ctx.Set(CONTEXT_KEY_GORM_DB, db)
 }
 
-func TransactionGORMDB(ctx *gin.Context, fn func(*gorm.DB) error) error {
+func TransactionGORMDB(ctx *gin.Context, fn func() error) error {
 	db, err := GetContentGORMDB(ctx)
 	if err != nil {
 		return err
@@ -40,6 +40,6 @@ func TransactionGORMDB(ctx *gin.Context, fn func(*gorm.DB) error) error {
 	return db.Transaction(func(tx *gorm.DB) error {
 		SetContentGORMDB(ctx, tx)
 		defer SetContentGORMDB(ctx, db)
-		return fn(tx)
+		return fn()
 	})
 }

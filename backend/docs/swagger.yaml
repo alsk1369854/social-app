@@ -11,6 +11,24 @@ definitions:
       error:
         type: string
     type: object
+  models.Pagination:
+    properties:
+      limit:
+        type: integer
+      offset:
+        type: integer
+    type: object
+  models.PaginationResponse-models_PostGetPostsByAuthorIDResponseItem:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.PostGetPostsByAuthorIDResponseItem'
+        type: array
+      pagination:
+        $ref: '#/definitions/models.Pagination'
+      totalCount:
+        type: integer
+    type: object
   models.PostCreateRequest:
     properties:
       authorID:
@@ -45,6 +63,34 @@ definitions:
           type: string
         type: array
       updatedAt:
+        type: string
+    type: object
+  models.PostGetPostsByAuthorIDResponseItem:
+    properties:
+      authorID:
+        type: string
+      content:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      imageURL:
+        type: string
+      likedCount:
+        type: integer
+      tags:
+        items:
+          $ref: '#/definitions/models.PostGetPostsByAuthorIDResponseItemTag'
+        type: array
+      updatedAt:
+        type: string
+    type: object
+  models.PostGetPostsByAuthorIDResponseItemTag:
+    properties:
+      id:
+        type: string
+      name:
         type: string
     type: object
   models.UserLoginRequest:
@@ -166,6 +212,44 @@ paths:
       security:
       - AccessToken: []
       summary: Create a post
+      tags:
+      - Post
+  /api/post/author/{authorID}/offset/{offset}/limit/{limit}:
+    get:
+      consumes:
+      - text/plain
+      parameters:
+      - description: Author ID
+        in: path
+        name: authorID
+        required: true
+        type: string
+      - description: Offset
+        in: path
+        name: offset
+        required: true
+        type: string
+      - description: Limit
+        in: path
+        name: limit
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PaginationResponse-models_PostGetPostsByAuthorIDResponseItem'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get posts by author ID
       tags:
       - Post
   /api/user/login:

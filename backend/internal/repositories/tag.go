@@ -3,10 +3,12 @@ package repositories
 import (
 	"backend/internal/middlewares"
 	"backend/internal/models"
+	"errors"
 	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type TagRepository struct{}
@@ -35,12 +37,40 @@ func (r *TagRepository) Create(ctx *gin.Context, tagBases []models.TagBase) ([]m
 			},
 			TagBase: tagBase,
 		}
-		if err := db.
-			Where(models.Tag{TagBase: models.TagBase{Name: tagBase.Name}}).
-			FirstOrCreate(&tags[i]).
-			Error; err != nil {
-			return nil, err
+	}
+	if err := db.Create(&tags).Error; err != nil {
+		return nil, err
+	}
+
+	return tags, nil
+}
+
+func (r *TagRepository) GetByName(ctx *gin.Context, name string) (*models.Tag, error) {
+	db, err := middlewares.GetContentGORMDB(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	tag := &models.Tag{}
+	if err := db.Where("name = ?", name).First(tag).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
 		}
+		return nil, err
+	}
+
+	return tag, nil
+}
+
+func (r *TagRepository) GetByIDs(ctx *gin.Context, ids []uuid.UUID) ([]models.Tag, error) {
+	db, err := middlewares.GetContentGORMDB(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	tags := []models.Tag{}
+	if err := db.Where("id IN ?", ids).Find(&tags).Error; err != nil {
+		return nil, err
 	}
 
 	return tags, nil

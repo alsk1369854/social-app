@@ -56,6 +56,52 @@ func TestPostRouter(t *testing.T) {
 	assert.Equal(t, 200, recorderLogin.Code, "應該回傳 200 表示登入成功")
 	assert.NotEmpty(t, respLoginBody.AccessToken, "Access token should not be empty")
 
+	t.Run("獲取作者 Posts", func(t *testing.T) {
+
+		t.Run("成功獲取 Posts", func(t *testing.T) {
+			// 新增一個 Post 以便後續測試
+			reqCreatePostBody := &models.PostCreateRequest{
+				AuthorID: respRegisterBody.ID,
+				ImageURL: nil,
+				Content:  "這是一個測試 Post",
+				Tags:     []string{"測試", "Post"},
+			}
+			bufReqCreatePostBody, _ := httpUtils.ToJSONBuffer(reqCreatePostBody)
+			reqCreatePost, _ := http.NewRequest("POST", "/api/post", bufReqCreatePostBody)
+			reqCreatePost.Header.Set("Content-Type", "application/json")
+			reqCreatePost.Header.Set("Authorization", respLoginBody.AccessToken)
+			recorderCreatePost := httptest.NewRecorder()
+			server.ServeHTTP(recorderCreatePost, reqCreatePost)
+			assert.Equal(t, 200, recorderCreatePost.Code, "應該回傳 200 表示創建 Post 成功")
+			respCreatePostBody := &models.PostCreateResponse{}
+			err = json.Unmarshal(recorderCreatePost.Body.Bytes(), respCreatePostBody)
+			assert.NoError(t, err, "Response should be valid JSON")
+			assert.Equal(t, reqCreatePostBody.AuthorID, respCreatePostBody.AuthorID, "Post AuthorID should match the created user ID")
+			assert.Equal(t, reqCreatePostBody.Content, respCreatePostBody.Content, "Post content should match the request content")
+			assert.Equal(t, len(reqCreatePostBody.Tags), len(respCreatePostBody.TagIDs), "Post tags should match the request tags")
+			assert.NotEmpty(t, respCreatePostBody.ID, "Post ID should not be empty")
+			assert.NotEmpty(t, respCreatePostBody.CreatedAt, "Post CreatedAt should not be empty")
+			assert.NotEmpty(t, respCreatePostBody.UpdatedAt, "Post UpdatedAt should not be empty")
+
+			// 1. 使用 token 獲取作者的 Posts
+			reqGetPostsByAuthorID, _ := http.NewRequest("GET", "/api/post/author/"+respLoginBody.ID.String()+"/offset/0/limit/10", nil)
+			reqGetPostsByAuthorID.Header.Set("Authorization", respLoginBody.AccessToken)
+			recorderGetPostsByAuthorID := httptest.NewRecorder()
+			server.ServeHTTP(recorderGetPostsByAuthorID, reqGetPostsByAuthorID)
+			assert.Equal(t, 200, recorderGetPostsByAuthorID.Code, "應該回傳 200 表示獲取 Posts 成功")
+			respGetPostsByAuthorIDBody := &models.PaginationResponse[models.PostGetPostsByAuthorIDResponseItem]{}
+			err = json.Unmarshal(recorderGetPostsByAuthorID.Body.Bytes(), respGetPostsByAuthorIDBody)
+			assert.NoError(t, err, "Response should be valid JSON")
+			assert.NotEmpty(t, respGetPostsByAuthorIDBody.Data, "Posts data should not be empty")
+			assert.Equal(t, respLoginBody.ID, respGetPostsByAuthorIDBody.Data[0].AuthorID, "Post AuthorID should match the logged-in user ID")
+			assert.NotEmpty(t, respGetPostsByAuthorIDBody.Data[0].ID, "Post ID should not be empty")
+			assert.NotEmpty(t, respGetPostsByAuthorIDBody.Data[0].CreatedAt, "Post CreatedAt should not be empty")
+			assert.NotEmpty(t, respGetPostsByAuthorIDBody.Data[0].UpdatedAt, "Post UpdatedAt should not be empty")
+			assert.NotEmpty(t, respGetPostsByAuthorIDBody.Data[0].Tags, "Post Tags should not be empty")
+			assert.NotNil(t, respGetPostsByAuthorIDBody.Data[0].LikedCount, "Post LikedCount should not be empty")
+		})
+	})
+
 	t.Run("創建 Post", func(t *testing.T) {
 
 		t.Run("創建失敗 - 內容為空", func(t *testing.T) {

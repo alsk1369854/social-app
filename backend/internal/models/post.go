@@ -10,9 +10,10 @@ type Post struct {
 type PostBase struct {
 	AuthorID uuid.UUID `gorm:"not null"`
 	Author   *User     `gorm:"foreignKey:AuthorID"`
-	ImageURL *string   `gorm:"default:null"`
-	Content  string    `gorm:"not null"`
-	Tags     []*Tag    `gorm:"many2many:post_to_tag;"`
+	ImageURL *string
+	Content  string  `gorm:"not null"`
+	Tags     []*Tag  `gorm:"many2many:post_to_tag;"`
+	Likes    []*User `gorm:"many2many:post_to_user;"`
 }
 
 // Post Create structs
@@ -38,4 +39,19 @@ type PostCreateResponseTag struct {
 	Name string    `json:"name"`
 }
 
-// type PostGetPostsByUserIDRequest struct{}
+// Post GetPostsByAuthorID structs
+type PostGetPostsByAuthorIDResponseItem struct {
+	ID         uuid.UUID                               `json:"id"`
+	AuthorID   uuid.UUID                               `json:"authorID"`
+	ImageURL   *string                                 `json:"imageURL"`
+	Content    string                                  `json:"content"`
+	CreatedAt  string                                  `json:"createdAt"`
+	UpdatedAt  string                                  `json:"updatedAt"`
+	Tags       []PostGetPostsByAuthorIDResponseItemTag `json:"tags"`
+	LikedCount uint                                    `json:"likedCount"`
+}
+
+type PostGetPostsByAuthorIDResponseItemTag struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+}
