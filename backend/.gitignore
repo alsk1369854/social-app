@@ -37,3 +37,8 @@ tmp/
 
 pgadmin-data/
 postgres-data/
+
+# swagger
+docs/docs.go
+docs/swagger.json
+docs/swagger.yaml
