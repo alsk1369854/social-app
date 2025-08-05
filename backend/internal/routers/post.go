@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
@@ -46,13 +45,7 @@ func (r *PostRouter) Bind(_router *gin.RouterGroup) {
 	// POST
 	{
 		router.POST("",
-			middlewares.VerifyAccessToken(func(authHeader string) (jwt.MapClaims, bool) {
-				claims, err := r.JWTUtils.ParseToken(authHeader, nil)
-				if err != nil {
-					return nil, false
-				}
-				return claims, true
-			}),
+			middlewares.VerifyAccessToken(middlewares.ParseJWTAccessToken),
 			r.CreatePost,
 		)
 	}
@@ -62,18 +55,52 @@ func (r *PostRouter) Bind(_router *gin.RouterGroup) {
 	}
 	//PUT
 	{
-		router.PUT("/like/:postID",
-			middlewares.VerifyAccessToken(func(authHeader string) (jwt.MapClaims, bool) {
-				claims, err := r.JWTUtils.ParseToken(authHeader, nil)
-				if err != nil {
-					return nil, false
-				}
-				return claims, true
-			}),
-			r.PostService.LikePost,
-		)
+		// router.PUT("/like/:postID",
+		// 	middlewares.VerifyAccessToken(middlewares.ParseJWTAccessToken),
+		// 	r.LikedPostByUser,
+		// )
 	}
 }
+
+// // @title Post API
+// // @Summary Like a post by user
+// // @Tags Post
+// // @Security AccessToken
+// // @Accept text/plain
+// // @Produce application/json
+// // @Param postID path string true "Post ID"
+// // @Success 200 {object} models.SuccessResponse
+// // @Failure 400 {object} models.ErrorResponse
+// // @Failure 404 {object} models.ErrorResponse
+// // @Failure 500 {object} models.ErrorResponse
+// // @Router /api/post/like/{postID} [put]
+// func (r *PostRouter) LikedPostByUser(ctx *gin.Context) {
+// 	postID, err := uuid.Parse(ctx.Param("postID"))
+// 	if err != nil {
+// 		ctx.JSON(400, models.ErrorResponse{Error: "invalid post ID"})
+// 		return
+// 	}
+// 	// 檢查貼文是否存在
+// 	if _, err := r.PostService.GetByID(ctx, postID); err != nil {
+// 		ctx.JSON(404, models.ErrorResponse{Error: "post not found"})
+// 		return
+// 	}
+
+// 	// 從 Token 中取得用戶 ID
+// 	claims, err := middlewares.GetContentAccessTokenData(ctx)
+// 	if err != nil {
+// 		ctx.JSON(500, models.ErrorResponse{Error: "failed to get user ID from token"})
+// 		return
+// 	}
+
+// 	// 添加 用戶對貼文的喜歡
+// 	if err := r.PostService.LikedByUser(ctx, postID, claims.UserID); err != nil {
+// 		ctx.JSON(500, models.ErrorResponse{Error: err.Error()})
+// 		return
+// 	}
+
+// 	ctx.JSON(200, models.SuccessResponse{Success: true})
+// }
 
 // @title Post API
 // @Summary Get posts by author ID

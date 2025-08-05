@@ -35,8 +35,8 @@ func NewPostService() *PostService {
 	return postService
 }
 
-func (s *PostService) GetPostByID(ctx *gin.Context, postID uuid.UUID) (*models.Post, error) {
-	return s.PostRepository.GetPostByID(ctx, postID)
+func (s *PostService) GetByID(ctx *gin.Context, postID uuid.UUID) (*models.Post, error) {
+	return s.PostRepository.GetByID(ctx, postID)
 }
 
 func (s *PostService) Create(ctx *gin.Context, postBases []models.PostBase, tags [][]models.Tag) ([]models.Post, error) {
@@ -67,4 +67,8 @@ func (s *PostService) CreatePostWithTags(ctx *gin.Context, postBase models.PostB
 
 func (s *PostService) GetPostsByAuthorID(ctx *gin.Context, AuthorID uuid.UUID, pagination *models.Pagination) ([]models.Post, uint, error) {
 	return s.PostRepository.GetPostsByAuthorID(ctx, AuthorID, pagination)
+}
+
+func (s *PostService) LikedByUser(ctx *gin.Context, postID uuid.UUID, userID uuid.UUID) error {
+	return s.PostRepository.LikedByUser(ctx, postID, userID)
 }

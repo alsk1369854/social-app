@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 const CONTEXT_KEY_ACCESS_TOKEN_DATA string = "CONTEXT_KEY:ACCESS_TOKEN_DATA"
@@ -30,7 +31,15 @@ func VerifyAccessToken(validateToken func(authHeader string) (jwt.MapClaims, boo
 	}
 }
 
-func GetContentAccessTokenData(ctx *gin.Context) (jwt.MapClaims, error) {
+func ParseJWTAccessToken(authHeader string) (jwt.MapClaims, bool) {
+	claims, err := pkg.NewJWTUtils().ParseToken(authHeader, nil)
+	if err != nil {
+		return nil, false
+	}
+	return claims, true
+}
+
+func GetContentAccessTokenData(ctx *gin.Context) (*models.JWTClaimsData, error) {
 	errorUtils := pkg.NewErrorUtils()
 	value, exists := ctx.Get(CONTEXT_KEY_ACCESS_TOKEN_DATA)
 	if !exists {
@@ -40,5 +49,15 @@ func GetContentAccessTokenData(ctx *gin.Context) (jwt.MapClaims, error) {
 	if !ok {
 		return nil, errorUtils.ServerInternalError("AccessToken Data not found in context, type assertion failed")
 	}
-	return tokenData, nil
+
+	// 解析 Token 中的數據
+	userID, err := uuid.Parse(tokenData["id"].(string))
+	if err != nil {
+		return nil, errorUtils.ServerInternalError("failed to parse user ID from token")
+	}
+
+	result := &models.JWTClaimsData{
+		UserID: userID,
+	}
+	return result, nil
 }

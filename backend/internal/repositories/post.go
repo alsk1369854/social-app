@@ -12,7 +12,9 @@ import (
 )
 
 type PostRepository struct {
-	errorUtils *pkg.ErrorUtils
+	ErrorUtils *pkg.ErrorUtils
+
+	UserRepository *UserRepository
 }
 
 var postRepositoryOnce sync.Once
@@ -21,13 +23,15 @@ var postRepository *PostRepository
 func NewPostRepository() *PostRepository {
 	postRepositoryOnce.Do(func() {
 		postRepository = &PostRepository{
-			errorUtils: pkg.NewErrorUtils(),
+			ErrorUtils: pkg.NewErrorUtils(),
+
+			UserRepository: NewUserRepository(),
 		}
 	})
 	return postRepository
 }
 
-func (r *PostRepository) GetPostByID(ctx *gin.Context, postID uuid.UUID) (*models.Post, error) {
+func (r *PostRepository) GetByID(ctx *gin.Context, postID uuid.UUID) (*models.Post, error) {
 	db, err := middlewares.GetContentGORMDB(ctx)
 	if err != nil {
 		return nil, err
@@ -44,7 +48,7 @@ func (r *PostRepository) GetPostByID(ctx *gin.Context, postID uuid.UUID) (*model
 
 func (r *PostRepository) Create(ctx *gin.Context, postBases []models.PostBase, tags [][]models.Tag) ([]models.Post, error) {
 	if len(postBases) != len(tags) {
-		return nil, r.errorUtils.ServerInternalError("postBases and tags length mismatch")
+		return nil, r.ErrorUtils.ServerInternalError("postBases and tags length mismatch")
 	}
 
 	db, err := middlewares.GetContentGORMDB(ctx)
@@ -77,6 +81,28 @@ func (r *PostRepository) Create(ctx *gin.Context, postBases []models.PostBase, t
 	return posts, nil
 }
 
+func (r *PostRepository) LikedByUser(ctx *gin.Context, postID uuid.UUID, userID uuid.UUID) error {
+	db, err := middlewares.GetContentGORMDB(ctx)
+	if err != nil {
+		return err
+	}
+
+	post, err := r.GetByID(ctx, postID)
+	if err != nil {
+		return err
+	}
+
+	user, err := r.UserRepository.GetByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	if err := db.Model(post).Association("Likes").Append(user); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *PostRepository) GetPostsByAuthorID(ctx *gin.Context, AuthorID uuid.UUID, pagination *models.Pagination) ([]models.Post, uint, error) {
 	db, err := middlewares.GetContentGORMDB(ctx)
 	if err != nil {
@@ -99,14 +125,14 @@ func (r *PostRepository) GetPostsByAuthorID(ctx *gin.Context, AuthorID uuid.UUID
 
 	if pagination != nil {
 		if pagination.Limit <= 0 {
-			return nil, 0, r.errorUtils.ServerInternalError("invalid pagination parameters")
+			return nil, 0, r.ErrorUtils.ServerInternalError("invalid pagination parameters")
 		}
 		db = db.Offset(int(pagination.Offset)).Limit(int(pagination.Limit))
 	}
 
 	posts := []models.Post{}
 	if err := db.Find(&posts).Error; err != nil {
-		return nil, 0, r.errorUtils.ServerInternalError(err.Error())
+		return nil, 0, r.ErrorUtils.ServerInternalError(err.Error())
 	}
 	return posts, uint(totalCount), nil
 }

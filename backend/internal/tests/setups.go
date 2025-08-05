@@ -3,7 +3,11 @@ package tests
 import (
 	"backend/internal/database"
 	"backend/internal/middlewares"
+	"backend/internal/models"
+	"backend/internal/pkg"
 	"backend/internal/servers"
+	"encoding/json"
+	"net/http"
 	"net/http/httptest"
 	"os"
 
@@ -44,4 +48,42 @@ func SetupTestServer(dbFile string) (*gin.Engine, *gin.RouterGroup, *gin.Context
 	})
 
 	return server, apiRouter, ctx, db, cleanup
+}
+
+func SetupTestUser(server *gin.Engine) (*models.UserRegisterRequest, string, error) {
+	httpUtils := pkg.NewHTTPUtils()
+
+	// 1. 創建一個新用戶
+	username := pkg.GetRandomString(5)
+	registerReqBody := &models.UserRegisterRequest{
+		Username: username,
+		Email:    username + "@example.com",
+		Password: "password123",
+	}
+	registerReqBodyBuf, _ := httpUtils.ToJSONBuffer(registerReqBody)
+	req, _ := http.NewRequest("POST", "/api/user/register", registerReqBodyBuf)
+	req.Header.Set("Content-Type", "application/json")
+	recorder := httptest.NewRecorder()
+	server.ServeHTTP(recorder, req)
+	registerRespBody := &models.UserRegisterResponse{}
+	if err := json.Unmarshal(recorder.Body.Bytes(), registerRespBody); err != nil {
+		return nil, "", err
+	}
+
+	// 2. 嘗試登入獲取 token
+	loginReq := &models.UserLoginRequest{
+		Email:    registerReqBody.Email,
+		Password: registerReqBody.Password,
+	}
+	loginReqBuf, _ := httpUtils.ToJSONBuffer(loginReq)
+	reqLogin, _ := http.NewRequest("POST", "/api/user/login", loginReqBuf)
+	reqLogin.Header.Set("Content-Type", "application/json")
+	recorder = httptest.NewRecorder()
+	server.ServeHTTP(recorder, reqLogin)
+	loginRespBody := &models.UserLoginResponse{}
+	if err := json.Unmarshal(recorder.Body.Bytes(), loginRespBody); err != nil {
+		return nil, "", err
+	}
+
+	return registerReqBody, loginRespBody.AccessToken, nil
 }

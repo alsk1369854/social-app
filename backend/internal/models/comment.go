@@ -15,3 +15,18 @@ type CommentBase struct {
 	Content  string     `gorm:"type:text;not null"`
 	ParentID *uuid.UUID `gorm:"type:uuid"`
 }
+
+// Create Comment structs
+type CommentCreateRequest struct {
+	PostID   uuid.UUID  `json:"post_id" binding:"required"`
+	Content  string     `json:"content" binding:"required"`
+	ParentID *uuid.UUID `json:"parent_id"`
+}
+
+type CommentCreateResponse struct {
+	ID       uuid.UUID  `json:"id"`
+	PostID   uuid.UUID  `json:"post_id"`
+	Content  string     `json:"content"`
+	ParentID *uuid.UUID `json:"parent_id"`
+	UserID   uuid.UUID  `json:"user_id"`
+}

@@ -47,16 +47,14 @@ func main() {
 	})
 
 	// Setup Gin server
-	server, apiRouter := servers.SetupGin(&servers.GinConfig{
-		DB: db,
-	})
+	server, apiRouter := servers.SetupGin(&servers.GinConfig{DB: db})
 	routers.NewCityRouter().Bind(apiRouter)
 	routers.NewUserRouter().Bind(apiRouter)
 	routers.NewPostRouter().Bind(apiRouter)
+	routers.NewCommentRouter().Bind(apiRouter)
 
 	// Start the server
-
-	log.Printf("Swagger docs available at http://%s:%s/swagger/index.html", host, port)
+	log.Printf("Swagger docs available at http://%s:%s/swagger/index.html\n", host, port)
 	if err := server.Run(host + ":" + port); err != nil {
 		log.Fatal(err)
 	}
