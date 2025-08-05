@@ -18,10 +18,9 @@ type PostBase struct {
 
 // Post Create structs
 type PostCreateRequest struct {
-	AuthorID uuid.UUID `json:"authorID" binding:"required"`
-	ImageURL *string   `json:"imageURL"`
-	Content  string    `json:"content" binding:"required"`
-	Tags     []string  `json:"tags" binding:"required"`
+	ImageURL *string  `json:"imageURL"`
+	Content  string   `json:"content" binding:"required"`
+	Tags     []string `json:"tags" binding:"required"`
 }
 
 type PostCreateResponse struct {

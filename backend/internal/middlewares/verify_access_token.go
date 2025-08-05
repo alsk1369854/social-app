@@ -41,6 +41,7 @@ func ParseJWTAccessToken(authHeader string) (jwt.MapClaims, bool) {
 
 func GetContentAccessTokenData(ctx *gin.Context) (*models.JWTClaimsData, error) {
 	errorUtils := pkg.NewErrorUtils()
+
 	value, exists := ctx.Get(CONTEXT_KEY_ACCESS_TOKEN_DATA)
 	if !exists {
 		return nil, errorUtils.ServerInternalError("AccessToken Data not found in context")
@@ -51,7 +52,7 @@ func GetContentAccessTokenData(ctx *gin.Context) (*models.JWTClaimsData, error) 
 	}
 
 	// 解析 Token 中的數據
-	userID, err := uuid.Parse(tokenData["id"].(string))
+	userID, err := uuid.Parse(tokenData["data"].(map[string]any)["UserID"].(string))
 	if err != nil {
 		return nil, errorUtils.ServerInternalError("failed to parse user ID from token")
 	}

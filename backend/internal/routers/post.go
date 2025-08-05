@@ -196,13 +196,21 @@ func (r *PostRouter) CreatePost(ctx *gin.Context) {
 		return
 	}
 
+	// 獲取 Token Data
+	tokenData, err := middlewares.GetContentAccessTokenData(ctx)
+	if err != nil {
+		err = r.PostService.ErrorUtils.ServerInternalError(err.Error())
+		ctx.JSON(500, models.ErrorResponse{Error: err.Error()})
+		return
+	}
+
 	// 創建 Post
 	tagBases := make([]models.TagBase, len(reqBody.Tags))
 	for i, tagName := range reqBody.Tags {
 		tagBases[i] = models.TagBase{Name: strings.Trim(tagName, " ")}
 	}
 	postBase := models.PostBase{
-		AuthorID: reqBody.AuthorID,
+		AuthorID: tokenData.UserID,
 		ImageURL: reqBody.ImageURL,
 		Content:  reqBody.Content,
 	}

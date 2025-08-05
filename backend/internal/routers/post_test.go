@@ -74,7 +74,6 @@ func TestPostRouter(t *testing.T) {
 		t.Run("成功獲取 Posts", func(t *testing.T) {
 			// 新增一個 Post 以便後續測試
 			reqCreatePostBody := &models.PostCreateRequest{
-				AuthorID: respRegisterBody.ID,
 				ImageURL: nil,
 				Content:  "這是一個測試 Post",
 				Tags:     []string{"測試", "Post"},
@@ -89,7 +88,6 @@ func TestPostRouter(t *testing.T) {
 			respCreatePostBody := &models.PostCreateResponse{}
 			err = json.Unmarshal(recorderCreatePost.Body.Bytes(), respCreatePostBody)
 			assert.NoError(t, err, "Response should be valid JSON")
-			assert.Equal(t, reqCreatePostBody.AuthorID, respCreatePostBody.AuthorID, "Post AuthorID should match the created user ID")
 			assert.Equal(t, reqCreatePostBody.Content, respCreatePostBody.Content, "Post content should match the request content")
 			assert.Equal(t, len(reqCreatePostBody.Tags), len(respCreatePostBody.TagIDs), "Post tags should match the request tags")
 			assert.NotEmpty(t, respCreatePostBody.ID, "Post ID should not be empty")
@@ -119,7 +117,6 @@ func TestPostRouter(t *testing.T) {
 
 		t.Run("創建失敗 - 內容為空", func(t *testing.T) {
 			reqCreatePostBody := &models.PostCreateRequest{
-				AuthorID: respLoginBody.ID,
 				ImageURL: nil,
 				Content:  "",
 				Tags:     []string{"測試", "Post"},
@@ -139,7 +136,6 @@ func TestPostRouter(t *testing.T) {
 
 		t.Run("創建失敗 - 內容超過 300 字元", func(t *testing.T) {
 			reqCreatePostBody := &models.PostCreateRequest{
-				AuthorID: respLoginBody.ID,
 				ImageURL: nil,
 				Content:  pkg.GetRandomString(301), // 超過 300 字元
 				Tags:     []string{"測試", "Post"},
@@ -159,7 +155,6 @@ func TestPostRouter(t *testing.T) {
 
 		t.Run("創建失敗 - 缺少 Authorization", func(t *testing.T) {
 			reqCreatePostBody := &models.PostCreateRequest{
-				AuthorID: respLoginBody.ID,
 				ImageURL: nil,
 				Content:  "這是一個測試 Post",
 				Tags:     []string{"測試", "Post"},
@@ -179,7 +174,6 @@ func TestPostRouter(t *testing.T) {
 
 			// 3. 使用 token 創建 Post
 			reqCreatePostBody := &models.PostCreateRequest{
-				AuthorID: respRegisterBody.ID,
 				ImageURL: nil,
 				Content:  "這是一個測試 Post",
 				Tags:     []string{"測試", "Post"},
@@ -194,7 +188,6 @@ func TestPostRouter(t *testing.T) {
 			respCreatePostBody := &models.PostCreateResponse{}
 			err = json.Unmarshal(recorderCreatePost.Body.Bytes(), respCreatePostBody)
 			assert.NoError(t, err, "Response should be valid JSON")
-			assert.Equal(t, reqCreatePostBody.AuthorID, respCreatePostBody.AuthorID, "Post AuthorID should match the created user ID")
 			assert.Equal(t, reqCreatePostBody.Content, respCreatePostBody.Content, "Post content should match the request content")
 			assert.Equal(t, len(reqCreatePostBody.Tags), len(respCreatePostBody.TagIDs), "Post tags should match the request tags")
 			assert.NotEmpty(t, respCreatePostBody.ID, "Post ID should not be empty")

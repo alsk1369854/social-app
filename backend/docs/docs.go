@@ -289,14 +289,10 @@ const docTemplate = `{
         "models.PostCreateRequest": {
             "type": "object",
             "required": [
-                "authorID",
                 "content",
                 "tags"
             ],
             "properties": {
-                "authorID": {
-                    "type": "string"
-                },
                 "content": {
                     "type": "string"
                 },

@@ -50,7 +50,30 @@ func SetupTestServer(dbFile string) (*gin.Engine, *gin.RouterGroup, *gin.Context
 	return server, apiRouter, ctx, db, cleanup
 }
 
-func SetupTestUser(server *gin.Engine) (*models.UserRegisterRequest, string, error) {
+// Required PostRouter.Bind
+func SetupTestPost(server *gin.Engine, accessToken string) (*models.PostCreateResponse, error) {
+	httpUtils := pkg.NewHTTPUtils()
+
+	createPostReqBody := &models.PostCreateRequest{
+		ImageURL: nil,
+		Content:  "這是一個測試 Post",
+		Tags:     []string{"測試", "Post"},
+	}
+	createPostReqBodyBuf, _ := httpUtils.ToJSONBuffer(createPostReqBody)
+	req, _ := http.NewRequest("POST", "/api/post", createPostReqBodyBuf)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", accessToken)
+	recorder := httptest.NewRecorder()
+	server.ServeHTTP(recorder, req)
+	createPostRespBody := &models.PostCreateResponse{}
+	if err := json.Unmarshal(recorder.Body.Bytes(), createPostRespBody); err != nil {
+		return nil, err
+	}
+	return createPostRespBody, nil
+}
+
+// Required UserRouter.Bind
+func SetupTestUser(server *gin.Engine) (*models.UserRegisterRequest, *models.UserLoginResponse, error) {
 	httpUtils := pkg.NewHTTPUtils()
 
 	// 1. 創建一個新用戶
@@ -67,7 +90,7 @@ func SetupTestUser(server *gin.Engine) (*models.UserRegisterRequest, string, err
 	server.ServeHTTP(recorder, req)
 	registerRespBody := &models.UserRegisterResponse{}
 	if err := json.Unmarshal(recorder.Body.Bytes(), registerRespBody); err != nil {
-		return nil, "", err
+		return nil, nil, err
 	}
 
 	// 2. 嘗試登入獲取 token
@@ -82,8 +105,8 @@ func SetupTestUser(server *gin.Engine) (*models.UserRegisterRequest, string, err
 	server.ServeHTTP(recorder, reqLogin)
 	loginRespBody := &models.UserLoginResponse{}
 	if err := json.Unmarshal(recorder.Body.Bytes(), loginRespBody); err != nil {
-		return nil, "", err
+		return nil, nil, err
 	}
 
-	return registerReqBody, loginRespBody.AccessToken, nil
+	return registerReqBody, loginRespBody, nil
 }

@@ -31,8 +31,6 @@ definitions:
     type: object
   models.PostCreateRequest:
     properties:
-      authorID:
-        type: string
       content:
         type: string
       imageURL:
@@ -42,7 +40,6 @@ definitions:
           type: string
         type: array
     required:
-    - authorID
     - content
     - tags
     type: object
