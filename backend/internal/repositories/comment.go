@@ -57,3 +57,20 @@ func (r *CommentRepository) GetByID(ctx *gin.Context, commentID uuid.UUID) (*mod
 
 	return &comment, nil
 }
+
+func (r *CommentRepository) GetListByPostID(ctx *gin.Context, postID uuid.UUID) ([]models.Comment, error) {
+	db, err := middlewares.GetContentGORMDB(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	comments := []models.Comment{}
+	if err := db.Where("post_id = ?", postID).
+		Order("created_at ASC").
+		Preload("User").
+		Find(&comments).Error; err != nil {
+		return nil, err
+	}
+
+	return comments, nil
+}

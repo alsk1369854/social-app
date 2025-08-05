@@ -30,3 +30,16 @@ type CommentCreateResponse struct {
 	ParentID *uuid.UUID `json:"parent_id"`
 	UserID   uuid.UUID  `json:"user_id"`
 }
+
+// Get Comments By PostID
+type CommentGetListByPostIDResponseItem struct {
+	ID          uuid.UUID                            `json:"id"`
+	PostID      uuid.UUID                            `json:"postID"`
+	Content     string                               `json:"content"`
+	ParentID    *uuid.UUID                           `json:"parentID"`
+	UserID      uuid.UUID                            `json:"userID"`
+	UserName    string                               `json:"userName"`
+	CreatedAt   string                               `json:"createdAt"`
+	UpdatedAt   string                               `json:"updatedAt"`
+	SubComments []CommentGetListByPostIDResponseItem `json:"subComments"`
+}

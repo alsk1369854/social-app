@@ -1,6 +1,8 @@
 package pkg
 
-import "math/rand"
+import (
+	"math/rand"
+)
 
 func GetPointer[T any](v T) *T {
 	return &v

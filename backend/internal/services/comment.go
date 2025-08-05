@@ -32,3 +32,7 @@ func (s *CommentService) Create(ctx *gin.Context, commentBases []models.CommentB
 func (s *CommentService) GetByID(ctx *gin.Context, commentID uuid.UUID) (*models.Comment, error) {
 	return s.CommentRepository.GetByID(ctx, commentID)
 }
+
+func (s *CommentService) GetListByPostID(ctx *gin.Context, postID uuid.UUID) ([]models.Comment, error) {
+	return s.CommentRepository.GetListByPostID(ctx, postID)
+}

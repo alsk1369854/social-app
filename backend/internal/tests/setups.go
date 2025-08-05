@@ -73,7 +73,7 @@ func SetupTestPost(server *gin.Engine, accessToken string) (*models.PostCreateRe
 }
 
 // Required UserRouter.Bind
-func SetupTestUser(server *gin.Engine) (*models.UserRegisterRequest, *models.UserLoginResponse, error) {
+func SetupTestUser(server *gin.Engine) (*models.UserRegisterResponse, *models.UserLoginResponse, error) {
 	httpUtils := pkg.NewHTTPUtils()
 
 	// 1. 創建一個新用戶
@@ -108,5 +108,5 @@ func SetupTestUser(server *gin.Engine) (*models.UserRegisterRequest, *models.Use
 		return nil, nil, err
 	}
 
-	return registerReqBody, loginRespBody, nil
+	return registerRespBody, loginRespBody, nil
 }

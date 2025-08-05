@@ -6,6 +6,54 @@ definitions:
       name:
         type: string
     type: object
+  models.CommentCreateRequest:
+    properties:
+      content:
+        type: string
+      parent_id:
+        type: string
+      post_id:
+        type: string
+    required:
+    - content
+    - post_id
+    type: object
+  models.CommentCreateResponse:
+    properties:
+      content:
+        type: string
+      id:
+        type: string
+      parent_id:
+        type: string
+      post_id:
+        type: string
+      user_id:
+        type: string
+    type: object
+  models.CommentGetListByPostIDResponseItem:
+    properties:
+      content:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      parentID:
+        type: string
+      postID:
+        type: string
+      subComments:
+        items:
+          $ref: '#/definitions/models.CommentGetListByPostIDResponseItem'
+        type: array
+      updatedAt:
+        type: string
+      userID:
+        type: string
+      userName:
+        type: string
+    type: object
   models.ErrorResponse:
     properties:
       error:
@@ -184,6 +232,75 @@ paths:
       summary: Get all cities
       tags:
       - City
+  /api/comment:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Comment data
+        in: body
+        name: comment
+        required: true
+        schema:
+          $ref: '#/definitions/models.CommentCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CommentCreateResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Post or parent comment not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - AccessToken: []
+      summary: Create a new comment
+      tags:
+      - Comment
+  /api/comment/list/post/{postID}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Post ID
+        in: path
+        name: postID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.CommentGetListByPostIDResponseItem'
+            type: array
+        "400":
+          description: Invalid post ID format
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Post not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get comments by post ID
+      tags:
+      - Comment
   /api/post:
     post:
       consumes:

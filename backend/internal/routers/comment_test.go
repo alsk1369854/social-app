@@ -5,6 +5,7 @@ import (
 	"backend/internal/pkg"
 	"backend/internal/tests"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -30,6 +31,40 @@ func TestCommentRouter(t *testing.T) {
 	postData, err := tests.SetupTestPost(server, loginData.AccessToken)
 	assert.NoError(t, err)
 	assert.NotNil(t, postData)
+
+	t.Run("GetCommentsByPostID", func(t *testing.T) {
+		t.Run("成功獲取評論列表", func(t *testing.T) {
+			// 創建兩個評論
+			for i := 0; i < 2; i++ {
+				commentCreateRequest := &models.CommentCreateRequest{
+					PostID:  postData.ID,
+					Content: "這是一個測試評論 " + fmt.Sprint(i+1),
+				}
+				bufCommentCreateRequest, _ := httpUtils.ToJSONBuffer(commentCreateRequest)
+				reqCreateComment, _ := http.NewRequest("POST", "/api/comment", bufCommentCreateRequest)
+				reqCreateComment.Header.Set("Content-Type", "application/json")
+				reqCreateComment.Header.Set("Authorization", loginData.AccessToken)
+				recorder := httptest.NewRecorder()
+				server.ServeHTTP(recorder, reqCreateComment)
+				assert.Equal(t, 200, recorder.Code, "應該回傳 200 表示評論創建成功")
+			}
+
+			// 獲取評論列表
+			reqGetComments, _ := http.NewRequest("GET", "/api/comment/list/post/"+postData.ID.String(), nil)
+			recorder := httptest.NewRecorder()
+			server.ServeHTTP(recorder, reqGetComments)
+			assert.Equal(t, 200, recorder.Code, "應該回傳 200 表示成功獲取評論列表")
+			responseBody := make([]models.CommentGetListByPostIDResponseItem, 0)
+			err := json.Unmarshal(recorder.Body.Bytes(), &responseBody)
+			assert.NoError(t, err, "Response should be valid JSON")
+			assert.Greater(t, len(responseBody), 0, "應該至少有一條評論")
+			for _, comment := range responseBody {
+				assert.Equal(t, postData.ID, comment.PostID, "Post ID should match the created post")
+				assert.NotEmpty(t, comment.Content, "Comment content should not be empty")
+				assert.NotEmpty(t, comment.UserID, "User ID should not be empty")
+			}
+		})
+	})
 
 	t.Run("CreateComment", func(t *testing.T) {
 
