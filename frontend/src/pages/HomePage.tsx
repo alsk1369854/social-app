@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
 import PostCreator from '../components/PostCreator';
 import PostsFeed from '../components/PostsFeed';
 import { Post, Comment } from '../models/Post';
+import PostAPI from '../apis/post';
+import { PostGetPostsByKeywordResponseItem } from '../apis/models/post';
 
 // Mock data for demonstration
 const mockPosts: Post[] = [
@@ -56,30 +58,52 @@ const mockComments: Record<string, Comment[]> = {
   ]
 };
 
+// Helper function to convert API response to Post model
+const convertAPIPostToPost = (apiPost: PostGetPostsByKeywordResponseItem): Post => ({
+  id: apiPost.id,
+  content: apiPost.content,
+  userID: apiPost.authorID,
+  username: undefined, // Will need to be fetched separately or added to API
+  createdAt: apiPost.createdAt,
+  updatedAt: apiPost.updatedAt,
+  tags: apiPost.tags.map(tag => ({ id: tag.id, name: tag.name }))
+});
+
 const HomePage: React.FC = () => {
   const { state, logout } = useAuth();
   const [posts, setPosts] = useState<Post[]>(mockPosts);
   const [postComments, setPostComments] = useState<Record<string, Comment[]>>(mockComments);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredPosts, setFilteredPosts] = useState<Post[]>(posts);
+  const [searchResults, setSearchResults] = useState<Post[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    // Filter posts based on search query
-    if (searchQuery.trim()) {
-      const filtered = posts.filter(post => 
-        post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.tags?.some(tag => tag.name.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-      setFilteredPosts(filtered);
-    } else {
-      setFilteredPosts(posts);
-    }
-  }, [searchQuery, posts]);
+  // Use search results when searching, otherwise use regular posts
+  const displayedPosts = searchQuery.trim() ? searchResults : posts;
 
-  const handleSearch = (query: string) => {
+  const handleSearch = async (query: string) => {
     setSearchQuery(query);
+    
+    if (query.trim()) {
+      setIsSearching(true);
+      try {
+        const response = await PostAPI.searchPosts({
+          keyword: query,
+          limit: '10',
+          offset: '0'
+        });
+        
+        const convertedPosts = response.data.map(convertAPIPostToPost);
+        setSearchResults(convertedPosts);
+      } catch (error) {
+        console.error('Search failed:', error);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    } else {
+      setSearchResults([]);
+    }
   };
 
   const handleCreatePost = async (content: string) => {
@@ -125,7 +149,7 @@ const HomePage: React.FC = () => {
     setLoading(false);
   };
 
-  const handleLoadComments = async (postId: string) => {
+  const handleLoadComments = async (_postId: string) => {
     // In a real app, this would fetch comments from the API if they haven't been loaded yet
     // For demo purposes, comments are already loaded
     await new Promise(resolve => setTimeout(resolve, 300));
@@ -143,7 +167,11 @@ const HomePage: React.FC = () => {
         {searchQuery && (
           <div className="mb-4 sm:mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 sm:p-4">
             <p className="text-blue-800 dark:text-blue-200 text-sm sm:text-base">
-              搜尋結果："{searchQuery}" ({filteredPosts.length} 則貼文)
+              {isSearching ? (
+                <>搜尋中："{searchQuery}"...</>
+              ) : (
+                <>搜尋結果："{searchQuery}" ({searchResults.length} 則貼文)</>
+              )}
             </p>
             <button
               onClick={() => setSearchQuery('')}
@@ -160,10 +188,10 @@ const HomePage: React.FC = () => {
         />
         
         <PostsFeed
-          posts={filteredPosts}
+          posts={displayedPosts}
           postComments={postComments}
           isLoggedIn={!!state.user}
-          loading={loading}
+          loading={loading || isSearching}
           onAddComment={handleAddComment}
           onLoadComments={handleLoadComments}
         />

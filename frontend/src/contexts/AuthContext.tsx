@@ -134,6 +134,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     dispatch({ type: 'REGISTER_START' });
     
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const response = await AuthAPI.register(request);
       
       // After registration, we need to login to get the access token
