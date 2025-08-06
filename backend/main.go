@@ -9,6 +9,7 @@ import (
 
 	_ "backend/docs"
 	"backend/internal/database"
+	"backend/internal/models"
 	"backend/internal/routers"
 	"backend/internal/servers"
 )
@@ -52,6 +53,15 @@ func main() {
 	routers.NewUserRouter().Bind(apiRouter)
 	routers.NewPostRouter().Bind(apiRouter)
 	routers.NewCommentRouter().Bind(apiRouter)
+
+	// Setup AI Router
+	routers.NewAIRouter(&models.AIModelConfigs{
+		ChatModel: models.AIModelConfig{
+			APIKey:    os.Getenv("OPENAI_API_KEY"),
+			BaseURL:   os.Getenv("OPENAI_BASE_URL"),
+			ModelName: os.Getenv("OPENAI_CHAT_MODEL"),
+		},
+	}).Bind(apiRouter)
 
 	// Start the server
 	log.Printf("Swagger docs available at http://%s:%s/swagger/index.html\n", host, port)
