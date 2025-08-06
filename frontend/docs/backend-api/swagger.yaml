@@ -1,4 +1,46 @@
 definitions:
+  models.AIGenerateTextContentOptimizationRequest:
+    properties:
+      context:
+        type: string
+      style:
+        type: string
+    required:
+    - context
+    - style
+    type: object
+  models.AIGenerateTextContentOptimizationResponse:
+    properties:
+      content:
+        type: string
+    type: object
+  models.AIGenerateTextCreatePostContentRequest:
+    properties:
+      style:
+        type: string
+      topic:
+        type: string
+    required:
+    - style
+    - topic
+    type: object
+  models.AIGenerateTextCreatePostContentResponse:
+    properties:
+      content:
+        type: string
+    type: object
+  models.AIGenerateTextRequest:
+    properties:
+      prompt:
+        type: string
+    required:
+    - prompt
+    type: object
+  models.AIGenerateTextResponse:
+    properties:
+      content:
+        type: string
+    type: object
   models.CityGetAllResponseItem:
     properties:
       id:
@@ -77,6 +119,17 @@ definitions:
       totalCount:
         type: integer
     type: object
+  models.PaginationResponse-models_PostGetPostsByKeywordResponseItem:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.PostGetPostsByKeywordResponseItem'
+        type: array
+      pagination:
+        $ref: '#/definitions/models.Pagination'
+      totalCount:
+        type: integer
+    type: object
   models.PostCreateRequest:
     properties:
       content:
@@ -132,6 +185,34 @@ definitions:
         type: string
     type: object
   models.PostGetPostsByAuthorIDResponseItemTag:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  models.PostGetPostsByKeywordResponseItem:
+    properties:
+      authorID:
+        type: string
+      content:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      imageURL:
+        type: string
+      likedCount:
+        type: integer
+      tags:
+        items:
+          $ref: '#/definitions/models.PostGetPostsByKeywordResponseItemTag'
+        type: array
+      updatedAt:
+        type: string
+    type: object
+  models.PostGetPostsByKeywordResponseItemTag:
     properties:
       id:
         type: string
@@ -212,6 +293,151 @@ info:
   title: Social APP API
   version: "1.0"
 paths:
+  /api/ai/generate/text:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: AI Content Generation Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.AIGenerateTextRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.AIGenerateTextResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Generate content using AI
+      tags:
+      - AI
+  /api/ai/generate/text/content-optimize:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: AI Content Generation Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.AIGenerateTextContentOptimizationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.AIGenerateTextContentOptimizationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Optimize content using AI
+      tags:
+      - AI
+  /api/ai/generate/text/content-optimize/stream:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: AI Content Optimization Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.AIGenerateTextContentOptimizationRequest'
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: Streaming response
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Optimize content using AI with streaming
+      tags:
+      - AI
+  /api/ai/generate/text/create-post-content:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: AI Create Post Content Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.AIGenerateTextCreatePostContentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.AIGenerateTextCreatePostContentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Create post content using AI
+      tags:
+      - AI
+  /api/ai/generate/text/stream:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: AI Content Generation Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.AIGenerateTextRequest'
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: Streaming response
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Generate content using AI with streaming
+      tags:
+      - AI
   /api/city/all:
     get:
       consumes:
@@ -364,6 +590,45 @@ paths:
           schema:
             $ref: '#/definitions/models.ErrorResponse'
       summary: Get posts by author ID
+      tags:
+      - Post
+  /api/post/list/search:
+    get:
+      consumes:
+      - text/plain
+      parameters:
+      - description: Search keyword
+        in: query
+        name: keyword
+        type: string
+      - description: Offset
+        in: query
+        name: offset
+        type: string
+      - description: Limit
+        in: query
+        name: limit
+        type: string
+      - description: User ID
+        in: query
+        name: user-id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PaginationResponse-models_PostGetPostsByKeywordResponseItem'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get posts by keyword
       tags:
       - Post
   /api/user/login:

@@ -7,7 +7,7 @@
 
 ### 專案結構
 - `./public/` 公開資源目錄
-- `./docs/backend-api/` 後端 API Swagger 文件，包含了。1. API 路徑描述: **swagger.json**; 2. API 數據類型描述: **swagger.yaml**
+- `./docs/backend-api/` 後端 API Swagger 文件，包含了。1. API 路徑描述: **swagger.json**; 2. API 數據類型描述: **swagger.yaml**。你也可以直接訪問後端 [Swagger](http://localhost:28080/swagger/index.html) 頁面
 - `./src/` 開發目錄
 - `./src/apis/` 放置後端 API 串接方法
 - `./src/apis/models/` 放置 `./src/apis/` 中使用到的接口數據模型定義
