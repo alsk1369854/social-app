@@ -51,7 +51,8 @@ func (r *PostRouter) Bind(_router *gin.RouterGroup) {
 	}
 	// GET
 	{
-		router.GET("/author/:authorID/offset/:offset/limit/:limit", r.GetPostsByAuthorID)
+		router.GET("/list/author/:authorID/offset/:offset/limit/:limit", r.GetPostsByAuthorID)
+		router.GET("/list/search", r.GetPostsByKeyword)
 	}
 	//PUT
 	{
@@ -60,6 +61,81 @@ func (r *PostRouter) Bind(_router *gin.RouterGroup) {
 		// 	r.LikedPostByUser,
 		// )
 	}
+}
+
+// @Tags Post
+// @Summary Get posts by keyword
+// @Accept text/plain
+// @Produce application/json
+// @Param keyword query string false "Search keyword"
+// @Param offset query string false "Offset"
+// @Param limit query string false "Limit"
+// @Param user-id query string false "User ID"
+// @Success 200 {object} models.PaginationResponse[models.PostGetPostsByKeywordResponseItem]
+// @Failure 400 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
+// @Router /api/post/list/search [get]
+func (r *PostRouter) GetPostsByKeyword(ctx *gin.Context) {
+	// keyword := ctx.Query("keyword")
+	offset, err := strconv.ParseUint(ctx.DefaultQuery("offset", "0"), 10, 64)
+	if err != nil {
+		ctx.JSON(400, models.ErrorResponse{Error: "invalid offset"})
+		return
+	}
+	limit, err := strconv.ParseUint(ctx.DefaultQuery("limit", "10"), 10, 64)
+	if err != nil || limit == 0 {
+		ctx.JSON(400, models.ErrorResponse{Error: "invalid limit"})
+		return
+	}
+	var userID *uuid.UUID
+	queryUserID := ctx.Query("user-id")
+	if queryUserID != "" {
+		parsedUserID, err := uuid.Parse(queryUserID)
+		if err != nil {
+			ctx.JSON(400, models.ErrorResponse{Error: "invalid user ID"})
+			return
+		}
+		userID = &parsedUserID
+		// 檢查用戶存在
+		if _, err := r.UserService.GetByID(ctx, *userID); err != nil {
+			ctx.JSON(404, models.ErrorResponse{Error: "user not found"})
+			return
+		}
+	}
+
+	pagination := &models.Pagination{
+		Offset: uint(offset),
+		Limit:  uint(limit),
+	}
+	posts, totalCount, err := r.PostService.GetList(ctx, pagination)
+	if err != nil {
+		ctx.JSON(500, models.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	// 構建回應
+	responseData := make([]models.PostGetPostsByKeywordResponseItem, len(posts))
+	for i, post := range posts {
+		tags := make([]models.PostGetPostsByKeywordResponseItemTag, len(post.Tags))
+		for j, tag := range post.Tags {
+			tags[j] = models.PostGetPostsByKeywordResponseItemTag{Name: tag.Name}
+		}
+		responseData[i] = models.PostGetPostsByKeywordResponseItem{
+			ID:         post.ID,
+			AuthorID:   post.AuthorID,
+			ImageURL:   post.ImageURL,
+			Content:    post.Content,
+			CreatedAt:  time.Unix(post.CreatedAt, 0).Format(time.RFC3339),
+			UpdatedAt:  time.Unix(post.UpdatedAt, 0).Format(time.RFC3339),
+			Tags:       tags,
+			LikedCount: uint(len(post.Likes)),
+		}
+	}
+	ctx.JSON(200, models.PaginationResponse[models.PostGetPostsByKeywordResponseItem]{
+		Data:       responseData,
+		TotalCount: totalCount,
+		Pagination: pagination,
+	})
 }
 
 // // @title Post API

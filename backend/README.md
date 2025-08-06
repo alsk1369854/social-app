@@ -66,6 +66,11 @@ go get github.com/swaggo/gin-swagger
 # jwt
 go get github.com/golang-jwt/jwt/v5
 
+# langchaingo
+go get github.com/tmc/langchaingo/prompts
+go get github.com/tmc/langchaingo/llms/openai
+go get github.com/joho/godotenv
+
 # other
 go get github.com/pkg/errors
 go get github.com/google/uuid

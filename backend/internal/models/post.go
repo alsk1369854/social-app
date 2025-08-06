@@ -54,3 +54,20 @@ type PostGetPostsByAuthorIDResponseItemTag struct {
 	ID   uuid.UUID `json:"id"`
 	Name string    `json:"name"`
 }
+
+// Post GetHotPosts structs
+type PostGetPostsByKeywordResponseItem struct {
+	ID         uuid.UUID                              `json:"id"`
+	AuthorID   uuid.UUID                              `json:"authorID"`
+	ImageURL   *string                                `json:"imageURL"`
+	Content    string                                 `json:"content"`
+	CreatedAt  string                                 `json:"createdAt"`
+	UpdatedAt  string                                 `json:"updatedAt"`
+	Tags       []PostGetPostsByKeywordResponseItemTag `json:"tags"`
+	LikedCount uint                                   `json:"likedCount"`
+}
+
+type PostGetPostsByKeywordResponseItemTag struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+}

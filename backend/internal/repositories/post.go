@@ -46,6 +46,39 @@ func (r *PostRepository) GetByID(ctx *gin.Context, postID uuid.UUID) (*models.Po
 	return post, nil
 }
 
+func (r *PostRepository) GetList(ctx *gin.Context, pagination *models.Pagination) ([]models.Post, uint, error) {
+	db, err := middlewares.GetContentGORMDB(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	db = db.Model(&models.Post{}).
+		Preload("Author").
+		Preload("Tags").
+		Preload("Likes").
+		Order(clause.OrderBy{Columns: []clause.OrderByColumn{
+			{Column: clause.Column{Name: "created_at"}, Desc: true},
+		}})
+
+	totalCount := int64(0)
+	if err := db.Count(&totalCount).Error; err != nil {
+		return nil, 0, err
+	}
+
+	if pagination != nil {
+		if pagination.Limit <= 0 {
+			return nil, 0, r.ErrorUtils.ServerInternalError("invalid pagination parameters")
+		}
+		db = db.Offset(int(pagination.Offset)).Limit(int(pagination.Limit))
+	}
+
+	posts := []models.Post{}
+	if err := db.Find(&posts).Error; err != nil {
+		return nil, 0, err
+	}
+	return posts, uint(totalCount), nil
+}
+
 func (r *PostRepository) Create(ctx *gin.Context, postBases []models.PostBase, tags [][]models.Tag) ([]models.Post, error) {
 	if len(postBases) != len(tags) {
 		return nil, r.ErrorUtils.ServerInternalError("postBases and tags length mismatch")

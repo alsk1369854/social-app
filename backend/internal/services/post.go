@@ -72,3 +72,7 @@ func (s *PostService) GetPostsByAuthorID(ctx *gin.Context, AuthorID uuid.UUID, p
 func (s *PostService) LikedByUser(ctx *gin.Context, postID uuid.UUID, userID uuid.UUID) error {
 	return s.PostRepository.LikedByUser(ctx, postID, userID)
 }
+
+func (s *PostService) GetList(ctx *gin.Context, pagination *models.Pagination) ([]models.Post, uint, error) {
+	return s.PostRepository.GetList(ctx, pagination)
+}
