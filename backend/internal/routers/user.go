@@ -95,7 +95,8 @@ func (r *UserRouter) Login(ctx *gin.Context) {
 		Email:       user.Email,
 		AccessToken: accessToken,
 	}
-	ctx.JSON(200, response)
+	ctx.IndentedJSON(200, response)
+	// ctx.JSON(200, response)
 }
 
 // @title User API

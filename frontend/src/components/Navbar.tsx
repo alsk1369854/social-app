@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useTheme } from '../hooks/useTheme';
 
 interface User {
@@ -9,16 +10,12 @@ interface User {
 interface NavbarProps {
   user?: User | null;
   onSearch: (query: string) => void;
-  onLoginClick: () => void;
-  onRegisterClick: () => void;
   onLogoutClick: () => void;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
   user,
   onSearch,
-  onLoginClick,
-  onRegisterClick,
   onLogoutClick
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -41,9 +38,12 @@ const Navbar: React.FC<NavbarProps> = ({
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+            <Link 
+              to="/"
+              className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+            >
               Ming 的社群網站
-            </h1>
+            </Link>
           </div>
 
           {/* Search Bar */}
@@ -116,19 +116,19 @@ const Navbar: React.FC<NavbarProps> = ({
               </div>
             ) : (
               <div className="flex items-center space-x-1 sm:space-x-2">
-                <button
-                  onClick={onLoginClick}
+                <Link
+                  to="/login"
                   className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-2 sm:px-3 py-2 text-sm font-medium"
                 >
                   登入
-                </button>
+                </Link>
                 <span className="text-gray-400 text-sm">|</span>
-                <button
-                  onClick={onRegisterClick}
+                <Link
+                  to="/register"
                   className="bg-blue-500 hover:bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-md text-sm font-medium transition-colors"
                 >
                   註冊
-                </button>
+                </Link>
               </div>
             )}
           </div>
