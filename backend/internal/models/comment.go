@@ -18,17 +18,17 @@ type CommentBase struct {
 
 // Create Comment structs
 type CommentCreateRequest struct {
-	PostID   uuid.UUID  `json:"post_id" binding:"required"`
+	PostID   uuid.UUID  `json:"postID" binding:"required"`
 	Content  string     `json:"content" binding:"required"`
-	ParentID *uuid.UUID `json:"parent_id"`
+	ParentID *uuid.UUID `json:"parentID"`
 }
 
 type CommentCreateResponse struct {
 	ID       uuid.UUID  `json:"id"`
-	PostID   uuid.UUID  `json:"post_id"`
+	PostID   uuid.UUID  `json:"postID"`
 	Content  string     `json:"content"`
-	ParentID *uuid.UUID `json:"parent_id"`
-	UserID   uuid.UUID  `json:"user_id"`
+	ParentID *uuid.UUID `json:"parentID"`
+	UserID   uuid.UUID  `json:"userID"`
 }
 
 // Get Comments By PostID
