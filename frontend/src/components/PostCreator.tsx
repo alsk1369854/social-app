@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import AIToolModal from './AIToolModal';
 
 interface PostCreatorProps {
   isLoggedIn: boolean;
@@ -11,6 +12,7 @@ const PostCreator: React.FC<PostCreatorProps> = ({ isLoggedIn, onCreatePost }) =
   const [content, setContent] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
   const maxLength = 300;
   const remainingChars = maxLength - content.length;
@@ -43,6 +45,18 @@ const PostCreator: React.FC<PostCreatorProps> = ({ isLoggedIn, onCreatePost }) =
     setIsExpanded(false);
   };
 
+  const handleOpenAITool = () => {
+    setIsAIModalOpen(true);
+  };
+
+  const handleCloseAITool = () => {
+    setIsAIModalOpen(false);
+  };
+
+  const handleUseAIContent = (aiContent: string) => {
+    setContent(aiContent);
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
       <form onSubmit={handleSubmit}>
@@ -62,7 +76,7 @@ const PostCreator: React.FC<PostCreatorProps> = ({ isLoggedIn, onCreatePost }) =
 
         {isExpanded && (
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
-            <div className="flex items-center">
+            <div className="flex items-center space-x-4">
               <span className={`text-sm ${
                 remainingChars < 0 
                   ? 'text-red-500' 
@@ -72,6 +86,18 @@ const PostCreator: React.FC<PostCreatorProps> = ({ isLoggedIn, onCreatePost }) =
               }`}>
                 {remainingChars} 字元剩餘
               </span>
+              
+              <button
+                type="button"
+                onClick={handleOpenAITool}
+                disabled={isSubmitting}
+                className="flex items-center space-x-1 px-3 py-1 text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 text-sm font-medium transition-colors disabled:opacity-50 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-md"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span>AI 工具</span>
+              </button>
             </div>
             
             <div className="flex space-x-2 w-full sm:w-auto justify-end">
@@ -94,6 +120,13 @@ const PostCreator: React.FC<PostCreatorProps> = ({ isLoggedIn, onCreatePost }) =
           </div>
         )}
       </form>
+      
+      <AIToolModal
+        isOpen={isAIModalOpen}
+        onClose={handleCloseAITool}
+        currentContent={content}
+        onUseAIContent={handleUseAIContent}
+      />
     </div>
   );
 };

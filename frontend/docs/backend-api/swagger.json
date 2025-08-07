@@ -7,53 +7,13 @@
         "version": "1.0"
     },
     "paths": {
-        "/api/ai/generate/text": {
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "AI"
-                ],
-                "summary": "Generate content using AI",
-                "parameters": [
-                    {
-                        "description": "AI Content Generation Request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.AIGenerateTextRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.AIGenerateTextResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/api/ai/generate/text/content-optimize": {
             "post": {
+                "security": [
+                    {
+                        "AccessToken": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -99,6 +59,11 @@
         },
         "/api/ai/generate/text/content-optimize/stream": {
             "post": {
+                "security": [
+                    {
+                        "AccessToken": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -144,6 +109,11 @@
         },
         "/api/ai/generate/text/create-post-content": {
             "post": {
+                "security": [
+                    {
+                        "AccessToken": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -187,8 +157,13 @@
                 }
             }
         },
-        "/api/ai/generate/text/stream": {
+        "/api/ai/generate/text/create-post-content/stream": {
             "post": {
+                "security": [
+                    {
+                        "AccessToken": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -198,15 +173,15 @@
                 "tags": [
                     "AI"
                 ],
-                "summary": "Generate content using AI with streaming",
+                "summary": "Create post content using AI with streaming",
                 "parameters": [
                     {
-                        "description": "AI Content Generation Request",
+                        "description": "AI Create Post Content Request",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.AIGenerateTextRequest"
+                            "$ref": "#/definitions/models.AIGenerateTextCreatePostContentRequest"
                         }
                     }
                 ],
@@ -663,25 +638,6 @@
             }
         },
         "models.AIGenerateTextCreatePostContentResponse": {
-            "type": "object",
-            "properties": {
-                "content": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.AIGenerateTextRequest": {
-            "type": "object",
-            "required": [
-                "prompt"
-            ],
-            "properties": {
-                "prompt": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.AIGenerateTextResponse": {
             "type": "object",
             "properties": {
                 "content": {

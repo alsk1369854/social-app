@@ -29,18 +29,6 @@ definitions:
       content:
         type: string
     type: object
-  models.AIGenerateTextRequest:
-    properties:
-      prompt:
-        type: string
-    required:
-    - prompt
-    type: object
-  models.AIGenerateTextResponse:
-    properties:
-      content:
-        type: string
-    type: object
   models.CityGetAllResponseItem:
     properties:
       id:
@@ -302,35 +290,6 @@ info:
   title: Social APP API
   version: "1.0"
 paths:
-  /api/ai/generate/text:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: AI Content Generation Request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/models.AIGenerateTextRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.AIGenerateTextResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-      summary: Generate content using AI
-      tags:
-      - AI
   /api/ai/generate/text/content-optimize:
     post:
       consumes:
@@ -357,6 +316,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - AccessToken: []
       summary: Optimize content using AI
       tags:
       - AI
@@ -386,6 +347,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - AccessToken: []
       summary: Optimize content using AI with streaming
       tags:
       - AI
@@ -415,20 +378,22 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - AccessToken: []
       summary: Create post content using AI
       tags:
       - AI
-  /api/ai/generate/text/stream:
+  /api/ai/generate/text/create-post-content/stream:
     post:
       consumes:
       - application/json
       parameters:
-      - description: AI Content Generation Request
+      - description: AI Create Post Content Request
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/models.AIGenerateTextRequest'
+          $ref: '#/definitions/models.AIGenerateTextCreatePostContentRequest'
       produces:
       - text/event-stream
       responses:
@@ -444,7 +409,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/models.ErrorResponse'
-      summary: Generate content using AI with streaming
+      security:
+      - AccessToken: []
+      summary: Create post content using AI with streaming
       tags:
       - AI
   /api/city/all:
