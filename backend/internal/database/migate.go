@@ -56,8 +56,16 @@ func createAdminUser(db *gorm.DB, email string, password string) (*models.User, 
 		if err := db.Where("author_id = ?", ordAdminUser.ID).Delete(&models.Post{}).Error; err != nil {
 			return nil, err
 		}
+		if err := db.Where("user_id = ?", ordAdminUser.ID).Delete(&models.Comment{}).Error; err != nil {
+			return nil, err
+		}
 		if err := db.Where("id = ?", ordAdminUser.ID).Delete(&models.User{}).Error; err != nil {
 			return nil, err
+		}
+		if ordAdminUser.AddressID != nil {
+			if err := db.Where("id = ?", ordAdminUser.AddressID).Delete(&models.Address{}).Error; err != nil {
+				return nil, err
+			}
 		}
 	}
 
