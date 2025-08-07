@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import AIAPI from '../apis/ai';
+import MarkdownEditor from './MarkdownEditor';
 
 interface AIToolModalProps {
   isOpen: boolean;
@@ -320,21 +321,22 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
                   </div>
                 )}
               </div>
-              <textarea
-                ref={textareaRef}
-                value={aiContent}
-                onChange={(e) => setAiContent(e.target.value)}
-                className={`w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white h-32 resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  !isGenerationComplete ? 'cursor-not-allowed bg-gray-50 dark:bg-gray-800 border-blue-200 dark:border-blue-800' : ''
-                }`}
-                placeholder="AI 生成的內容會在這裡顯示..."
-                readOnly={!isGenerationComplete}
-                style={{
-                  fontFamily: 'inherit',
-                  lineHeight: '1.5',
-                  wordWrap: 'break-word'
-                }}
-              />
+              <div className="relative">
+                <MarkdownEditor
+                  value={aiContent}
+                  onChange={setAiContent}
+                  placeholder="AI 生成的內容會在這裡顯示..."
+                  disabled={!isGenerationComplete}
+                  className={`min-h-32 ${
+                    !isGenerationComplete ? 'cursor-not-allowed bg-gray-50 dark:bg-gray-800 border-blue-200 dark:border-blue-800' : ''
+                  }`}
+                />
+                <textarea
+                  ref={textareaRef}
+                  style={{ position: 'absolute', top: -9999, left: -9999, opacity: 0 }}
+                  readOnly
+                />
+              </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {!isGenerationComplete 
                   ? 'AI 正在生成內容，請等待完成後再編輯...' 

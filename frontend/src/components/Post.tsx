@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import MarkdownRenderer from './MarkdownRenderer';
+import MarkdownEditor from './MarkdownEditor';
 
 interface Comment {
   id: string;
@@ -91,7 +93,10 @@ const Post: React.FC<PostProps> = ({
                 {formatDate(comment.createdAt)}
               </span>
             </div>
-            <p className="text-sm text-gray-800 dark:text-gray-200 break-words">{comment.content}</p>
+            <MarkdownRenderer 
+              content={comment.content} 
+              className="text-sm text-gray-800 dark:text-gray-200" 
+            />
           </div>
           {comment.subComments && comment.subComments.length > 0 && (
             <div className="mt-2">
@@ -122,7 +127,10 @@ const Post: React.FC<PostProps> = ({
 
       {/* Post Content */}
       <div className="mb-4">
-        <p className="text-gray-900 dark:text-white whitespace-pre-wrap text-sm sm:text-base leading-relaxed">{post.content}</p>
+        <MarkdownRenderer 
+          content={post.content} 
+          className="text-sm sm:text-base leading-relaxed" 
+        />
       </div>
 
       {/* Post Tags */}
@@ -162,35 +170,33 @@ const Post: React.FC<PostProps> = ({
           {/* Add Comment Form */}
           {isLoggedIn ? (
             <form onSubmit={handleSubmitComment} className="mt-4">
-              <div className="flex space-x-3">
-                <div className="flex-1">
-                  <textarea
-                    value={commentContent}
-                    onChange={(e) => setCommentContent(e.target.value)}
-                    placeholder="寫個留言..."
-                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md resize-none h-16 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  />
-                  <div className="flex justify-between items-center mt-2">
-                    <div className="text-xs text-gray-400">
-                      {commentContent.length > 0 && `${commentContent.length} 字元`}
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        type="button"
-                        onClick={() => setCommentContent('')}
-                        className="px-3 py-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-sm transition-colors"
-                      >
-                        清除
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={!commentContent.trim() || isSubmittingComment}
-                        className="px-3 py-1 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-md text-sm font-medium transition-colors"
-                      >
-                        {isSubmittingComment ? '發布中...' : '留言'}
-                      </button>
-                    </div>
-                  </div>
+              <div className="mb-3">
+                <MarkdownEditor
+                  value={commentContent}
+                  onChange={setCommentContent}
+                  placeholder="寫個留言..."
+                  className="min-h-16"
+                />
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="text-xs text-gray-400">
+                  {commentContent.length > 0 && `${commentContent.length} 字元`}
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => setCommentContent('')}
+                    className="px-3 py-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-sm transition-colors"
+                  >
+                    清除
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!commentContent.trim() || isSubmittingComment}
+                    className="px-3 py-1 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-md text-sm font-medium transition-colors"
+                  >
+                    {isSubmittingComment ? '發布中...' : '留言'}
+                  </button>
                 </div>
               </div>
             </form>
