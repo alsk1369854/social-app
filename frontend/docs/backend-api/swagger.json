@@ -829,8 +829,7 @@
         "models.PostCreateRequest": {
             "type": "object",
             "required": [
-                "content",
-                "tags"
+                "content"
             ],
             "properties": {
                 "content": {
@@ -838,12 +837,6 @@
                 },
                 "imageURL": {
                     "type": "string"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 }
             }
         },

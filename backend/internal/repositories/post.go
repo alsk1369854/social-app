@@ -39,7 +39,10 @@ func (r *PostRepository) GetByID(ctx *gin.Context, postID uuid.UUID) (*models.Po
 
 	post := &models.Post{}
 	if err := db.Model(post).
-		Where(&models.Post{TableModel: models.TableModel{ID: postID}}).
+		Preload("Author").
+		Preload("Tags").
+		Preload("Likes").
+		Where("id = ?", postID).
 		First(post).Error; err != nil {
 		return nil, err
 	}
@@ -149,13 +152,13 @@ func (r *PostRepository) Create(ctx *gin.Context, postBases []models.PostBase, t
 			PostBase:   postBase,
 		}
 	}
-	if err := db.Create(posts).Error; err != nil {
+	if err := db.Create(&posts).Error; err != nil {
 		return nil, err
 	}
 
 	// Associate tags with posts
-	for i, post := range posts {
-		if err := db.Model(&post).Association("Tags").Append(tags[i]); err != nil {
+	for i := range posts {
+		if err := db.Model(&posts[i]).Association("Tags").Append(tags[i]); err != nil {
 			return nil, err
 		}
 	}
@@ -196,6 +199,7 @@ func (r *PostRepository) GetPostsByAuthorID(ctx *gin.Context, AuthorID uuid.UUID
 
 	db = db.Model(&models.Post{}).
 		Where(&models.Post{PostBase: models.PostBase{AuthorID: AuthorID}}).
+		Preload("Author").
 		Preload("Tags").
 		Preload("Likes").
 		Order(clause.OrderByColumn{

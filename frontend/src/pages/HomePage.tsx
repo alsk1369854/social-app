@@ -6,7 +6,6 @@ import PostsFeed from '../components/PostsFeed';
 import { Post, Comment } from '../models/Post';
 import PostAPI from '../apis/post';
 import { PostGetPostsByKeywordResponseItem } from '../apis/models/post';
-import { parseTagsFromContent, removeTagMarkersFromContent } from '../utils/tagParser';
 
 // Mock data for demonstration
 const mockPosts: Post[] = [
@@ -72,7 +71,7 @@ const convertAPIPostToPost = (apiPost: PostGetPostsByKeywordResponseItem): Post 
 
 const HomePage: React.FC = () => {
   const { state, logout } = useAuth();
-  const [posts, setPosts] = useState<Post[]>(mockPosts);
+  const [posts] = useState<Post[]>(mockPosts); // Keep as fallback for initial load
   const [defaultPosts, setDefaultPosts] = useState<Post[]>([]);
   const [postComments, setPostComments] = useState<Record<string, Comment[]>>(mockComments);
   const [searchQuery, setSearchQuery] = useState('');
@@ -139,35 +138,28 @@ const HomePage: React.FC = () => {
   const handleCreatePost = async (content: string) => {
     if (!state.user || !state.accessToken) return;
 
+    console.log('Creating post with token:', state.accessToken); // Debug token
+    console.log('User state:', state.user);
+    console.log('Is authenticated:', state.isAuthenticated);
+    console.log('LocalStorage token:', localStorage.getItem('accessToken'));
+    console.log('LocalStorage user:', localStorage.getItem('user'));
     setLoading(true);
     try {
-      // Parse tags from content
-      const tags = parseTagsFromContent(content);
-      
-      // Call the API to create the post
-      const response = await PostAPI.createPost({
-        content: removeTagMarkersFromContent(content),
-        tags,
+      // Call the API to create the post (backend will handle tag parsing)
+      await PostAPI.createPost({
+        content: content, // Send original content with hashtags
         imageURL: '' // Optional, can be extended later
       }, state.accessToken);
 
-      // Convert API response to Post model for local state
-      const newPost: Post = {
-        id: response.id,
-        content: response.content,
-        userID: response.authorID,
-        username: state.user.username,
-        createdAt: response.createdAt,
-        updatedAt: response.updatedAt,
-        tags: tags.map(tag => ({ id: '', name: tag })) // Map string tags to tag objects
-      };
-
-      // Update local posts state
-      setPosts(prevPosts => [newPost, ...prevPosts]);
-      
-      // If we're showing default posts, also update that
-      if (defaultPostsLoaded) {
-        setDefaultPosts(prevPosts => [newPost, ...prevPosts]);
+      // After successful post creation, refresh the current view
+      if (searchQuery.trim()) {
+        // If we're currently searching, re-execute the search to get updated results
+        console.log('Refreshing search results for query:', searchQuery);
+        await handleSearch(searchQuery);
+      } else {
+        // If we're showing default posts, reload the default posts list
+        console.log('Refreshing default posts list');
+        await loadDefaultPosts();
       }
     } catch (error) {
       console.error('Failed to create post:', error);
@@ -226,13 +218,12 @@ const HomePage: React.FC = () => {
               )}
             </p>
             <button
-              onClick={() => {
+              onClick={async () => {
                 setSearchQuery('');
                 setSearchResults([]);
-                // Optionally refresh default posts when clearing search
-                if (!defaultPostsLoaded) {
-                  loadDefaultPosts();
-                }
+                // Always refresh default posts when clearing search to ensure latest data
+                console.log('Clearing search and refreshing default posts');
+                await loadDefaultPosts();
               }}
               className="mt-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 underline text-sm"
             >

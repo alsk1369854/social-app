@@ -40,14 +40,19 @@ type PostCreateResponseTag struct {
 
 // Post GetPostsByAuthorID structs
 type PostGetPostsByAuthorIDResponseItem struct {
-	ID         uuid.UUID                               `json:"id"`
-	AuthorID   uuid.UUID                               `json:"authorID"`
-	ImageURL   *string                                 `json:"imageURL"`
-	Content    string                                  `json:"content"`
-	CreatedAt  string                                  `json:"createdAt"`
-	UpdatedAt  string                                  `json:"updatedAt"`
-	Tags       []PostGetPostsByAuthorIDResponseItemTag `json:"tags"`
-	LikedCount uint                                    `json:"likedCount"`
+	ID         uuid.UUID                                `json:"id"`
+	Author     PostGetPostsByAuthorIDResponseItemAuthor `json:"author"`
+	ImageURL   *string                                  `json:"imageURL"`
+	Content    string                                   `json:"content"`
+	CreatedAt  string                                   `json:"createdAt"`
+	UpdatedAt  string                                   `json:"updatedAt"`
+	Tags       []PostGetPostsByAuthorIDResponseItemTag  `json:"tags"`
+	LikedCount uint                                     `json:"likedCount"`
+}
+
+type PostGetPostsByAuthorIDResponseItemAuthor struct {
+	ID       uuid.UUID `json:"id"`
+	Username string    `json:"username"`
 }
 
 type PostGetPostsByAuthorIDResponseItemTag struct {
@@ -57,14 +62,19 @@ type PostGetPostsByAuthorIDResponseItemTag struct {
 
 // Post GetHotPosts structs
 type PostGetPostsByKeywordResponseItem struct {
-	ID         uuid.UUID                              `json:"id"`
-	AuthorID   uuid.UUID                              `json:"authorID"`
-	ImageURL   *string                                `json:"imageURL"`
-	Content    string                                 `json:"content"`
-	CreatedAt  string                                 `json:"createdAt"`
-	UpdatedAt  string                                 `json:"updatedAt"`
-	Tags       []PostGetPostsByKeywordResponseItemTag `json:"tags"`
-	LikedCount uint                                   `json:"likedCount"`
+	ID         uuid.UUID                               `json:"id"`
+	Author     PostGetPostsByKeywordResponseItemAuthor `json:"author"`
+	ImageURL   *string                                 `json:"imageURL"`
+	Content    string                                  `json:"content"`
+	CreatedAt  string                                  `json:"createdAt"`
+	UpdatedAt  string                                  `json:"updatedAt"`
+	Tags       []PostGetPostsByKeywordResponseItemTag  `json:"tags"`
+	LikedCount uint                                    `json:"likedCount"`
+}
+
+type PostGetPostsByKeywordResponseItemAuthor struct {
+	ID       uuid.UUID `json:"id"`
+	Username string    `json:"username"`
 }
 
 type PostGetPostsByKeywordResponseItemTag struct {

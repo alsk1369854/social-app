@@ -10,18 +10,26 @@ const API_BASE_URL = '';
 
 class PostAPI {
   static async createPost(request: PostCreateRequest, accessToken: string): Promise<PostCreateResponse> {
+    console.log('Making POST request to /api/post with token:', accessToken);
     const response = await fetch(`${API_BASE_URL}/api/post`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
+        'Authorization': accessToken,
       },
       body: JSON.stringify(request),
     });
 
     if (!response.ok) {
-      const errorData: ErrorResponse = await response.json();
-      throw new Error(errorData.error || 'Failed to create post');
+      console.error('API Error Response:', response.status, response.statusText);
+      try {
+        const errorData: ErrorResponse = await response.json();
+        console.error('Error Data:', errorData);
+        throw new Error(errorData.error || 'Failed to create post');
+      } catch (jsonError) {
+        console.error('Failed to parse error response:', jsonError);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
     }
 
     return response.json();

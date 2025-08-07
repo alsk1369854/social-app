@@ -119,11 +119,14 @@ func (r *PostRouter) GetPostsByKeyword(ctx *gin.Context) {
 	for i, post := range posts {
 		tags := make([]models.PostGetPostsByKeywordResponseItemTag, len(post.Tags))
 		for j, tag := range post.Tags {
-			tags[j] = models.PostGetPostsByKeywordResponseItemTag{Name: tag.Name}
+			tags[j] = models.PostGetPostsByKeywordResponseItemTag{ID: tag.ID, Name: tag.Name}
 		}
 		responseData[i] = models.PostGetPostsByKeywordResponseItem{
-			ID:         post.ID,
-			AuthorID:   post.AuthorID,
+			ID: post.ID,
+			Author: models.PostGetPostsByKeywordResponseItemAuthor{
+				ID:       post.Author.ID,
+				Username: post.Author.Username,
+			},
 			ImageURL:   post.ImageURL,
 			Content:    post.Content,
 			CreatedAt:  time.Unix(post.CreatedAt, 0).Format(time.RFC3339),
@@ -231,11 +234,14 @@ func (r *PostRouter) GetPostsByAuthorID(ctx *gin.Context) {
 	for i, post := range posts {
 		tags := make([]models.PostGetPostsByAuthorIDResponseItemTag, len(post.Tags))
 		for j, tag := range post.Tags {
-			tags[j] = models.PostGetPostsByAuthorIDResponseItemTag{Name: tag.Name}
+			tags[j] = models.PostGetPostsByAuthorIDResponseItemTag{ID: tag.ID, Name: tag.Name}
 		}
 		responseData[i] = models.PostGetPostsByAuthorIDResponseItem{
-			ID:         post.ID,
-			AuthorID:   post.AuthorID,
+			ID: post.ID,
+			Author: models.PostGetPostsByAuthorIDResponseItemAuthor{
+				ID:       post.Author.ID,
+				Username: post.Author.Username,
+			},
 			ImageURL:   post.ImageURL,
 			Content:    post.Content,
 			CreatedAt:  time.Unix(post.CreatedAt, 0).Format(time.RFC3339),

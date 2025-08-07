@@ -136,13 +136,8 @@ definitions:
         type: string
       imageURL:
         type: string
-      tags:
-        items:
-          type: string
-        type: array
     required:
     - content
-    - tags
     type: object
   models.PostCreateResponse:
     properties:

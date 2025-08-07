@@ -45,7 +45,7 @@ func (s *PostService) Create(ctx *gin.Context, postBases []models.PostBase, tags
 
 func (s *PostService) CreatePostWithTags(ctx *gin.Context, postBase models.PostBase, tagBases []models.TagBase) (*models.Post, error) {
 
-	var post *models.Post
+	var postID uuid.UUID
 	if err := middlewares.TransactionGORMDB(ctx, func() error {
 		tags, err := s.TagService.CreateIfNotExist(ctx, tagBases)
 		if err != nil {
@@ -56,12 +56,16 @@ func (s *PostService) CreatePostWithTags(ctx *gin.Context, postBase models.PostB
 		if err != nil {
 			return err
 		}
-		post = &posts[0]
+		postID = posts[0].ID
 		return nil
 	}); err != nil {
 		return nil, s.ErrorUtils.ServerInternalError(err.Error())
 	}
 
+	post, err := s.PostRepository.GetByID(ctx, postID)
+	if err != nil {
+		return nil, s.ErrorUtils.ServerInternalError(err.Error())
+	}
 	return post, nil
 }
 

@@ -74,7 +74,7 @@ func TestPostRouter(t *testing.T) {
 			err = json.Unmarshal(recorderGetPostsByAuthorID.Body.Bytes(), respGetPostsByAuthorIDBody)
 			assert.NoError(t, err, "Response should be valid JSON")
 			assert.NotEmpty(t, respGetPostsByAuthorIDBody.Data, "Posts data should not be empty")
-			assert.Equal(t, loginData.ID, respGetPostsByAuthorIDBody.Data[0].AuthorID, "Post AuthorID should match the logged-in user ID")
+			assert.Equal(t, loginData.ID, respGetPostsByAuthorIDBody.Data[0].Author.ID, "Post AuthorID should match the logged-in user ID")
 			assert.NotEmpty(t, respGetPostsByAuthorIDBody.Data[0].ID, "Post ID should not be empty")
 			assert.NotEmpty(t, respGetPostsByAuthorIDBody.Data[0].CreatedAt, "Post CreatedAt should not be empty")
 			assert.NotEmpty(t, respGetPostsByAuthorIDBody.Data[0].UpdatedAt, "Post UpdatedAt should not be empty")

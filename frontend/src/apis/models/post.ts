@@ -40,7 +40,6 @@ export type PostSearchResponse = PaginationResponse<PostGetPostsByKeywordRespons
 
 export interface PostCreateRequest {
   content: string;
-  tags: string[];
   imageURL?: string;
 }
 
