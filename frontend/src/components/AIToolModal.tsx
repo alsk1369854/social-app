@@ -25,19 +25,9 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [aiContent, setAiContent] = useState('');
-  const [abortController, setAbortController] = useState<AbortController | null>(null);
-  const [isGenerationComplete, setIsGenerationComplete] = useState(true);
-  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (!isOpen) {
-      // Clean up any ongoing streams
-      if (abortController) {
-        abortController.abort();
-        setAbortController(null);
-      }
-      
-      
       // 重置狀態
       setTopic('');
       setStyle('');
@@ -45,9 +35,8 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
       setError(null);
       setMode('create');
       setIsLoading(false);
-      setIsGenerationComplete(true);
     }
-  }, [isOpen, abortController]);
+  }, [isOpen]);
 
 
   const handleClose = () => {
@@ -67,101 +56,28 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
       return;
     }
 
-    // Cancel any existing stream
-    if (abortController) {
-      abortController.abort();
-    }
-
-    const newAbortController = new AbortController();
-    setAbortController(newAbortController);
     setIsLoading(true);
-    setIsGenerationComplete(false);
     setError(null);
     setAiContent('');
 
     try {
+      let response;
       if (mode === 'create') {
-        await AIAPI.createPostContentStream(
+        response = await AIAPI.createPostContent(
           { topic: topic.trim(), style: style.trim() },
-          state.accessToken,
-          (chunk: string) => {
-            if (!newAbortController.signal.aborted) {
- 
-              setAiContent(prev => {
-                const newContent = prev + chunk;
-                // 滾動到底部
-                setTimeout(() => {
-                  if (textareaRef.current) {
-                    textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
-                  }
-                }, 0);
-                return newContent;
-              });
-   
-            }
-          },
-          () => {
-            // 生成完成回調
-            if (!newAbortController.signal.aborted) {
-              setIsLoading(false);
-              setIsGenerationComplete(true);
-              setAbortController(null);
-            }
-          },
-          (errorMsg: string) => {
-            // 錯誤回調
-            if (!newAbortController.signal.aborted) {
-              setError(errorMsg);
-              setIsLoading(false);
-              setIsGenerationComplete(true);
-              setAbortController(null);
-            }
-          }
+          state.accessToken
         );
       } else {
-        await AIAPI.optimizeContentStream(
+        response = await AIAPI.optimizeContent(
           { context: currentContent.trim(), style: style.trim() },
-          state.accessToken,
-          (chunk: string) => {
-            if (!newAbortController.signal.aborted) {
-              setAiContent(prev => {
-                const newContent = prev + chunk;
-                // 滾動到底部
-                setTimeout(() => {
-                  if (textareaRef.current) {
-                    textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
-                  }
-                }, 0);
-                return newContent;
-              });
-            }
-          },
-          () => {
-            // 生成完成回調
-            if (!newAbortController.signal.aborted) {
-              setIsLoading(false);
-              setIsGenerationComplete(true);
-              setAbortController(null);
-            }
-          },
-          (errorMsg: string) => {
-            // 錯誤回調
-            if (!newAbortController.signal.aborted) {
-              setError(errorMsg);
-              setIsLoading(false);
-              setIsGenerationComplete(true);
-              setAbortController(null);
-            }
-          }
+          state.accessToken
         );
       }
-    } catch (err) {
-      if (newAbortController.signal.aborted) {
-        // Stream was cancelled, don't show error
-        return;
-      }
       
-      // Handle errors that weren't caught by the error callback
+      setAiContent(response.content || '');
+      
+    } catch (err) {
+      // Handle errors
       if (err instanceof Error) {
         let errorMessage = '';
         if (err.message.includes('401') || err.message.includes('unauthorized')) {
@@ -179,21 +95,11 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
       } else {
         setError('生成內容時發生未知錯誤');
       }
-      
+    } finally {
       setIsLoading(false);
-      setIsGenerationComplete(true);
-      setAbortController(null);
     }
   };
 
-  const handleCancel = () => {
-    if (abortController) {
-      abortController.abort();
-      setAbortController(null);
-      setIsLoading(false);
-      setIsGenerationComplete(true);
-    }
-  };
 
   const canGenerate = () => {
     if (mode === 'create') {
@@ -317,7 +223,6 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
                       <div className="w-1 h-1 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                     </div>
                     <span>正在生成中...</span>
-                    <div className="w-2 h-3 bg-blue-600 dark:bg-blue-400 animate-pulse"></div>
                   </div>
                 )}
               </div>
@@ -326,19 +231,14 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
                   value={aiContent}
                   onChange={setAiContent}
                   placeholder="AI 生成的內容會在這裡顯示..."
-                  disabled={!isGenerationComplete}
+                  disabled={isLoading}
                   className={`min-h-32 ${
-                    !isGenerationComplete ? 'cursor-not-allowed bg-gray-50 dark:bg-gray-800 border-blue-200 dark:border-blue-800' : ''
+                    isLoading ? 'cursor-not-allowed bg-gray-50 dark:bg-gray-800 border-blue-200 dark:border-blue-800' : ''
                   }`}
-                />
-                <textarea
-                  ref={textareaRef}
-                  style={{ position: 'absolute', top: -9999, left: -9999, opacity: 0 }}
-                  readOnly
                 />
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {!isGenerationComplete 
+                {isLoading 
                   ? 'AI 正在生成內容，請等待完成後再編輯...' 
                   : '你可以在這裡編輯AI生成的內容'
                 }
@@ -355,31 +255,21 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
               取消
             </button>
             
-            {!aiContent || !isGenerationComplete ? (
-              <div className="flex space-x-2">
+            {!aiContent && !isLoading ? (
+              <button
+                onClick={handleGenerate}
+                disabled={!canGenerate() || isLoading}
+                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-md font-medium transition-colors flex items-center"
+              >
                 {isLoading && (
-                  <button
-                    onClick={handleCancel}
-                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md font-medium transition-colors"
-                  >
-                    停止生成
-                  </button>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
                 )}
-                <button
-                  onClick={handleGenerate}
-                  disabled={!canGenerate() || isLoading}
-                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-md font-medium transition-colors flex items-center"
-                >
-                  {isLoading && (
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                  )}
-                  {isLoading ? '正在生成中...' : '開始生成'}
-                </button>
-              </div>
-            ) : (
+                開始生成
+              </button>
+            ) : aiContent && !isLoading ? (
               <button
                 onClick={handleUseContent}
                 disabled={!aiContent.trim()}
@@ -387,7 +277,19 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
               >
                 使用此內容
               </button>
-            )}
+            ) : isLoading ? (
+              <button
+                onClick={handleGenerate}
+                disabled={true}
+                className="px-4 py-2 bg-blue-500 disabled:bg-gray-400 text-white rounded-md font-medium transition-colors flex items-center"
+              >
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                正在生成中...
+              </button>
+            ) : null}
           </div>
         </div>
       </div>

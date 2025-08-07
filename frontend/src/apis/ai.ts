@@ -92,7 +92,9 @@ class AIAPI {
             const content = line.substring(6);
             
             if (content && content !== '' && !content.includes('[ERROR]')) {
-              onChunk(content);
+              // Convert escaped newlines to actual newlines
+              const formattedContent = content.replace(/\\n/g, '\n');
+              onChunk(formattedContent);
             }
           }
         }
@@ -190,7 +192,9 @@ class AIAPI {
             const content = line.substring(6);
             
             if (content && content !== '' && !content.includes('[ERROR]')) {
-              onChunk(content);
+              // Convert escaped newlines to actual newlines
+              const formattedContent = content.replace(/\\n/g, '\n');
+              onChunk(formattedContent);
             }
           }
         }
