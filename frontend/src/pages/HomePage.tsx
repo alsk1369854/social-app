@@ -62,8 +62,8 @@ const mockComments: Record<string, Comment[]> = {
 const convertAPIPostToPost = (apiPost: PostGetPostsByKeywordResponseItem): Post => ({
   id: apiPost.id,
   content: apiPost.content,
-  userID: apiPost.authorID,
-  username: undefined, // Will need to be fetched separately or added to API
+  userID: apiPost.author.id,
+  username: apiPost.author.username,
   createdAt: apiPost.createdAt,
   updatedAt: apiPost.updatedAt,
   tags: apiPost.tags.map(tag => ({ id: tag.id, name: tag.name }))

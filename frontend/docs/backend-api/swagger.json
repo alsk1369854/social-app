@@ -872,8 +872,8 @@
         "models.PostGetPostsByAuthorIDResponseItem": {
             "type": "object",
             "properties": {
-                "authorID": {
-                    "type": "string"
+                "author": {
+                    "$ref": "#/definitions/models.PostGetPostsByAuthorIDResponseItemAuthor"
                 },
                 "content": {
                     "type": "string"
@@ -901,6 +901,17 @@
                 }
             }
         },
+        "models.PostGetPostsByAuthorIDResponseItemAuthor": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "models.PostGetPostsByAuthorIDResponseItemTag": {
             "type": "object",
             "properties": {
@@ -915,8 +926,8 @@
         "models.PostGetPostsByKeywordResponseItem": {
             "type": "object",
             "properties": {
-                "authorID": {
-                    "type": "string"
+                "author": {
+                    "$ref": "#/definitions/models.PostGetPostsByKeywordResponseItemAuthor"
                 },
                 "content": {
                     "type": "string"
@@ -940,6 +951,17 @@
                     }
                 },
                 "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.PostGetPostsByKeywordResponseItemAuthor": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }

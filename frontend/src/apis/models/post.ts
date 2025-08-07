@@ -25,8 +25,13 @@ export interface PostGetPostsByKeywordResponseItemTag {
   name: string;
 }
 
+export interface PostGetPostsByKeywordResponseItemAuthor {
+  id: string;
+  username: string;
+}
+
 export interface PostGetPostsByKeywordResponseItem {
-  authorID: string;
+  author: PostGetPostsByKeywordResponseItemAuthor;
   content: string;
   createdAt: string;
   id: string;
