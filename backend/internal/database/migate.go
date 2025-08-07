@@ -40,56 +40,51 @@ func Migrate(db *gorm.DB) error {
 func createAdminUser(db *gorm.DB, email string, password string) (*models.User, error) {
 	cryptoUtils := pkg.NewCryptoUtils()
 
-	// 使用正則表達式提取使用者名稱
-	extractUsernameRegex := regexp.MustCompile(`^(?P<username>.+)@.+\..+$`)
-	if !extractUsernameRegex.MatchString(email) {
+	// 驗證 email 格式，提取 username
+	re := regexp.MustCompile(`^(.+?)@.+\..+$`)
+	matches := re.FindStringSubmatch(email)
+	if len(matches) < 2 {
 		return nil, errors.New("invalid email format")
 	}
+	username := matches[1]
 
-	// 刪除已存在的管理員帳號
-	ordAdminUser := &models.User{}
-	if err := db.Where(&models.User{UserBase: models.UserBase{Email: email}}).
-		Select("id").First(ordAdminUser).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	var user models.User
+	err := db.Where("email = ?", email).First(&user).Error
+
+	if err == nil {
+		// 使用者已存在，更新密碼
+		user.HashedPassword = cryptoUtils.GeneratePasswordHash(&pkg.CryptoUtilsPasswordHashInput{
+			Email:    email,
+			Password: password,
+		})
+		if err := db.Save(&user).Error; err != nil {
+			return nil, err
+		}
+		return &user, nil
+	}
+
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
-	if ordAdminUser.ID != uuid.Nil {
-		if err := db.Where("author_id = ?", ordAdminUser.ID).Delete(&models.Post{}).Error; err != nil {
-			return nil, err
-		}
-		if err := db.Where("user_id = ?", ordAdminUser.ID).Delete(&models.Comment{}).Error; err != nil {
-			return nil, err
-		}
-		if err := db.Where("id = ?", ordAdminUser.ID).Delete(&models.User{}).Error; err != nil {
-			return nil, err
-		}
-		if ordAdminUser.AddressID != nil {
-			if err := db.Where("id = ?", ordAdminUser.AddressID).Delete(&models.Address{}).Error; err != nil {
-				return nil, err
-			}
-		}
-	}
 
-	// 創建新的管理員帳號
-	matches := extractUsernameRegex.FindStringSubmatch(email)
-	username := matches[extractUsernameRegex.SubexpIndex("username")]
-	hashedPassword := cryptoUtils.GeneratePasswordHash(&pkg.CryptoUtilsPasswordHashInput{
-		Email:    email,
-		Password: password,
-	})
-	adminUser := &models.User{
-		TableModel: models.TableModel{
-			ID: uuid.New(),
-		},
+	// 使用者不存在，建立新帳號
+	newUser := &models.User{
+		TableModel: models.TableModel{ID: uuid.New()},
 		UserBase: models.UserBase{
-			Username:       username,
-			Email:          email,
-			HashedPassword: hashedPassword,
+			Username: username,
+			Email:    email,
+			HashedPassword: cryptoUtils.GeneratePasswordHash(&pkg.CryptoUtilsPasswordHashInput{
+				Email:    email,
+				Password: password,
+			}),
 		},
 	}
-	if err := db.Create(adminUser).Error; err != nil {
+
+	if err := db.Create(newUser).Error; err != nil {
 		return nil, err
 	}
-	return adminUser, nil
+
+	return newUser, nil
 }
 
 func createTaiwanCitys(db *gorm.DB) error {

@@ -278,8 +278,8 @@ func (r *PostRouter) CreatePost(ctx *gin.Context) {
 	}
 	contentLen := utf8.RuneCountInString(reqBody.Content)
 	fmt.Print(contentLen)
-	if reqBody.Content == "" || utf8.RuneCountInString(reqBody.Content) > 300 {
-		ctx.JSON(400, models.ErrorResponse{Error: "content characters must be between 0 and 300"})
+	if reqBody.Content == "" || utf8.RuneCountInString(reqBody.Content) > 500 {
+		ctx.JSON(400, models.ErrorResponse{Error: "content characters must be between 0 and 500"})
 		return
 	}
 
