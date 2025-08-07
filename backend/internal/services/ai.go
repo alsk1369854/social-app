@@ -49,30 +49,11 @@ func (s *AIService) CreatePostContent(ctx *gin.Context, model *openai.LLM, topic
 	}
 
 	// 使用 LangChain 的 LLM 生成內容
-	// content := []llms.MessageContent{
-	// 	llms.TextParts(llms.ChatMessageTypeHuman, instruction),
-	// }
-	// output, err := model.GenerateContent(
-	// 	context.Background(), content, llms.WithMaxLength(250),
-	// 	llms.WithStreamingFunc(func(_ context.Context, chunk []byte) error {
-	// 		for _, callback := range options {
-	// 			if callback == nil {
-	// 				continue
-	// 			}
-	// 			if err := callback(chunk); err != nil {
-	// 				return err
-	// 			}
-	// 		}
-	// 		return nil
-	// 	}),
-	// )
-	// if err != nil {
-	// 	return "", err
-	// }
-	// return output.Choices[0].Content, nil
-
-	output, err := llms.GenerateFromSinglePrompt(
-		context.Background(), model, instruction, llms.WithMaxLength(200),
+	messages := []llms.MessageContent{
+		llms.TextParts(llms.ChatMessageTypeHuman, instruction),
+	}
+	output, err := model.GenerateContent(
+		context.Background(), messages, llms.WithTemperature(0.7),
 		llms.WithStreamingFunc(func(_ context.Context, chunk []byte) error {
 			for _, callback := range options {
 				if callback == nil {
@@ -88,7 +69,7 @@ func (s *AIService) CreatePostContent(ctx *gin.Context, model *openai.LLM, topic
 	if err != nil {
 		return "", err
 	}
-	return output, nil
+	return output.Choices[0].Content, nil
 }
 
 func (s *AIService) ContentOptimization(ctx *gin.Context, model *openai.LLM, content string, style string, options ...models.AITextStreamingCallback) (string, error) {
@@ -113,8 +94,11 @@ func (s *AIService) ContentOptimization(ctx *gin.Context, model *openai.LLM, con
 	}
 
 	// 使用 LangChain 的 LLM 生成內容
-	output, err := llms.GenerateFromSinglePrompt(
-		context.Background(), model, instruction, llms.WithMaxLength(200),
+	messages := []llms.MessageContent{
+		llms.TextParts(llms.ChatMessageTypeHuman, instruction),
+	}
+	output, err := model.GenerateContent(
+		context.Background(), messages, llms.WithTemperature(0.7),
 		llms.WithStreamingFunc(func(_ context.Context, chunk []byte) error {
 			for _, callback := range options {
 				if callback == nil {
@@ -130,6 +114,5 @@ func (s *AIService) ContentOptimization(ctx *gin.Context, model *openai.LLM, con
 	if err != nil {
 		return "", err
 	}
-
-	return output, nil
+	return output.Choices[0].Content, nil
 }

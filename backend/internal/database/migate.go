@@ -26,7 +26,10 @@ func Migrate(db *gorm.DB) error {
 	}
 
 	// 創建管理員帳號
-	createAdminUser(db, "admin@example.com", "admin@admin")
+	_, err := createAdminUser(db, "admin@example.com", "admin@admin")
+	if err != nil {
+		return err
+	}
 
 	// 預設創建，台北到台南的 city 資料
 	createTaiwanCitys(db)
@@ -34,19 +37,28 @@ func Migrate(db *gorm.DB) error {
 	return nil
 }
 
-func createAdminUser(db *gorm.DB, email string, password string) error {
+func createAdminUser(db *gorm.DB, email string, password string) (*models.User, error) {
 	cryptoUtils := pkg.NewCryptoUtils()
 
 	// 使用正則表達式提取使用者名稱
 	extractUsernameRegex := regexp.MustCompile(`^(?P<username>.+)@.+\..+$`)
 	if !extractUsernameRegex.MatchString(email) {
-		return errors.New("invalid email format")
+		return nil, errors.New("invalid email format")
 	}
 
 	// 刪除已存在的管理員帳號
+	ordAdminUser := &models.User{}
 	if err := db.Where(&models.User{UserBase: models.UserBase{Email: email}}).
-		Delete(&models.User{}).Error; err != nil {
-		return err
+		Select("id").First(ordAdminUser).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+	if ordAdminUser.ID != uuid.Nil {
+		if err := db.Where("author_id = ?", ordAdminUser.ID).Delete(&models.Post{}).Error; err != nil {
+			return nil, err
+		}
+		if err := db.Where("id = ?", ordAdminUser.ID).Delete(&models.User{}).Error; err != nil {
+			return nil, err
+		}
 	}
 
 	// 創建新的管理員帳號
@@ -66,7 +78,10 @@ func createAdminUser(db *gorm.DB, email string, password string) error {
 			HashedPassword: hashedPassword,
 		},
 	}
-	return db.Create(adminUser).Error
+	if err := db.Create(adminUser).Error; err != nil {
+		return nil, err
+	}
+	return adminUser, nil
 }
 
 func createTaiwanCitys(db *gorm.DB) error {

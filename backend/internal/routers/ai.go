@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"backend/internal/middlewares"
 	"backend/internal/models"
 	"backend/internal/pkg"
 	"backend/internal/services"
@@ -49,17 +50,64 @@ func (r *AIRouter) Bind(_router *gin.RouterGroup) {
 	router := _router.Group("/ai")
 	// POST
 	{
-		router.POST("/generate/text", r.GenerateText)
-		router.POST("/generate/text/stream", r.GenerateTextStream)
-		router.POST("/generate/text/content-optimize", r.ContentOptimization)
-		router.POST("/generate/text/content-optimize/stream", r.ContentOptimizationStream)
-		router.POST("/generate/text/create-post-content", r.CreatePostContent)
+		router.POST("/generate/text", middlewares.VerifyAccessToken(middlewares.ParseJWTAccessToken), r.GenerateText)
+		router.POST("/generate/text/stream", middlewares.VerifyAccessToken(middlewares.ParseJWTAccessToken), r.GenerateTextStream)
+		router.POST("/generate/text/content-optimize", middlewares.VerifyAccessToken(middlewares.ParseJWTAccessToken), r.ContentOptimization)
+		router.POST("/generate/text/content-optimize/stream", middlewares.VerifyAccessToken(middlewares.ParseJWTAccessToken), r.ContentOptimizationStream)
+		router.POST("/generate/text/create-post-content", middlewares.VerifyAccessToken(middlewares.ParseJWTAccessToken), r.CreatePostContent)
+		router.POST("/generate/text/create-post-content/stream", middlewares.VerifyAccessToken(middlewares.ParseJWTAccessToken), r.CreatePostContentStream)
 	}
+}
+
+// @title AI API
+// @Summary Create post content using AI with streaming
+// @Tags AI
+// @Security AccessToken
+// @Accept application/json
+// @Produce text/event-stream
+// @Param request body models.AIGenerateTextCreatePostContentRequest true "AI Create Post Content Request"
+// @Success 200 {string} string "Streaming response"
+// @Failure 400 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
+// @Router /api/ai/generate/text/create-post-content/stream [post]
+func (r *AIRouter) CreatePostContentStream(ctx *gin.Context) {
+	reqBody := &models.AIGenerateTextCreatePostContentRequest{}
+	if err := ctx.ShouldBindJSON(reqBody); err != nil {
+		ctx.JSON(400, models.ErrorResponse{Error: "Invalid request body"})
+		return
+	}
+
+	// 設定 Header 為流式傳輸
+	ctx.Writer.Header().Set("Content-Type", "text/event-stream")
+	ctx.Writer.Header().Set("Cache-Control", "no-cache")
+	ctx.Writer.Header().Set("Connection", "keep-alive")
+	ctx.Writer.Flush()
+
+	if _, err := r.AIService.CreatePostContent(
+		ctx, r.ChatModel, reqBody.Topic, reqBody.Style,
+		func(chunk []byte) error {
+			formatted := fmt.Sprintf("data: %s\n\n", chunk)
+			if _, err := ctx.Writer.Write([]byte(formatted)); err != nil {
+				return err
+			}
+			ctx.Writer.Flush()
+			return nil
+		},
+	); err != nil {
+		fmt.Fprintf(ctx.Writer, "event: [ERROR]\ndata: %s\n\n", err.Error())
+		ctx.Writer.Flush()
+		return
+	}
+
+	// 結束訊號
+	fmt.Fprintf(ctx.Writer, "event: [DONE]\n\n")
+	ctx.Writer.Flush()
 }
 
 // @title AI API
 // @Summary Create post content using AI
 // @Tags AI
+// @Security AccessToken
 // @Accept application/json
 // @Produce application/json
 // @Param request body models.AIGenerateTextCreatePostContentRequest true "AI Create Post Content Request"
@@ -89,6 +137,7 @@ func (r *AIRouter) CreatePostContent(ctx *gin.Context) {
 // @title AI API
 // @Summary Optimize content using AI
 // @Tags AI
+// @Security AccessToken
 // @Accept application/json
 // @Produce application/json
 // @Param request body models.AIGenerateTextContentOptimizationRequest true "AI Content Generation Request"
@@ -118,6 +167,7 @@ func (r *AIRouter) ContentOptimization(ctx *gin.Context) {
 // @title AI API
 // @Summary Optimize content using AI with streaming
 // @Tags AI
+// @Security AccessToken
 // @Accept application/json
 // @Produce text/event-stream
 // @Param request body models.AIGenerateTextContentOptimizationRequest true "AI Content Optimization Request"
@@ -162,6 +212,7 @@ func (r *AIRouter) ContentOptimizationStream(ctx *gin.Context) {
 // @title AI API
 // @Summary Generate content using AI with streaming
 // @Tags AI
+// @Security AccessToken
 // @Accept application/json
 // @Produce text/event-stream
 // @Param request body models.AIGenerateTextRequest true "AI Content Generation Request"
@@ -206,6 +257,7 @@ func (r *AIRouter) GenerateTextStream(ctx *gin.Context) {
 // @title AI API
 // @Summary Generate content using AI
 // @Tags AI
+// @Security AccessToken
 // @Accept application/json
 // @Produce application/json
 // @Param request body models.AIGenerateTextRequest true "AI Content Generation Request"
