@@ -24,16 +24,30 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [aiContent, setAiContent] = useState('');
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
+  const [isGenerationComplete, setIsGenerationComplete] = useState(true);
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (!isOpen) {
+      // Clean up any ongoing streams
+      if (abortController) {
+        abortController.abort();
+        setAbortController(null);
+      }
+      
+      
+      // 重置狀態
       setTopic('');
       setStyle('');
       setAiContent('');
       setError(null);
       setMode('create');
+      setIsLoading(false);
+      setIsGenerationComplete(true);
     }
-  }, [isOpen]);
+  }, [isOpen, abortController]);
+
 
   const handleClose = () => {
     onClose();
@@ -52,28 +66,131 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
       return;
     }
 
+    // Cancel any existing stream
+    if (abortController) {
+      abortController.abort();
+    }
+
+    const newAbortController = new AbortController();
+    setAbortController(newAbortController);
     setIsLoading(true);
+    setIsGenerationComplete(false);
     setError(null);
     setAiContent('');
 
     try {
       if (mode === 'create') {
-        const response = await AIAPI.createPostContent(
+        await AIAPI.createPostContentStream(
           { topic: topic.trim(), style: style.trim() },
-          state.accessToken
+          state.accessToken,
+          (chunk: string) => {
+            if (!newAbortController.signal.aborted) {
+ 
+              setAiContent(prev => {
+                const newContent = prev + chunk;
+                // 滾動到底部
+                setTimeout(() => {
+                  if (textareaRef.current) {
+                    textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
+                  }
+                }, 0);
+                return newContent;
+              });
+   
+            }
+          },
+          () => {
+            // 生成完成回調
+            if (!newAbortController.signal.aborted) {
+              setIsLoading(false);
+              setIsGenerationComplete(true);
+              setAbortController(null);
+            }
+          },
+          (errorMsg: string) => {
+            // 錯誤回調
+            if (!newAbortController.signal.aborted) {
+              setError(errorMsg);
+              setIsLoading(false);
+              setIsGenerationComplete(true);
+              setAbortController(null);
+            }
+          }
         );
-        setAiContent(response.content);
       } else {
-        const response = await AIAPI.optimizeContent(
+        await AIAPI.optimizeContentStream(
           { context: currentContent.trim(), style: style.trim() },
-          state.accessToken
+          state.accessToken,
+          (chunk: string) => {
+            if (!newAbortController.signal.aborted) {
+              setAiContent(prev => {
+                const newContent = prev + chunk;
+                // 滾動到底部
+                setTimeout(() => {
+                  if (textareaRef.current) {
+                    textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
+                  }
+                }, 0);
+                return newContent;
+              });
+            }
+          },
+          () => {
+            // 生成完成回調
+            if (!newAbortController.signal.aborted) {
+              setIsLoading(false);
+              setIsGenerationComplete(true);
+              setAbortController(null);
+            }
+          },
+          (errorMsg: string) => {
+            // 錯誤回調
+            if (!newAbortController.signal.aborted) {
+              setError(errorMsg);
+              setIsLoading(false);
+              setIsGenerationComplete(true);
+              setAbortController(null);
+            }
+          }
         );
-        setAiContent(response.content);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '生成內容時發生錯誤');
-    } finally {
+      if (newAbortController.signal.aborted) {
+        // Stream was cancelled, don't show error
+        return;
+      }
+      
+      // Handle errors that weren't caught by the error callback
+      if (err instanceof Error) {
+        let errorMessage = '';
+        if (err.message.includes('401') || err.message.includes('unauthorized')) {
+          errorMessage = '登入已過期，請重新登入';
+        } else if (err.message.includes('400') || err.message.includes('Bad Request')) {
+          errorMessage = '請求參數錯誤，請檢查輸入內容';
+        } else if (err.message.includes('500') || err.message.includes('Internal Server Error')) {
+          errorMessage = '伺服器錯誤，請稍後再試';
+        } else if (err.message.includes('network') || err.message.includes('fetch')) {
+          errorMessage = '網路連接錯誤，請檢查網路連接';
+        } else {
+          errorMessage = err.message;
+        }
+        setError(errorMessage);
+      } else {
+        setError('生成內容時發生未知錯誤');
+      }
+      
       setIsLoading(false);
+      setIsGenerationComplete(true);
+      setAbortController(null);
+    }
+  };
+
+  const handleCancel = () => {
+    if (abortController) {
+      abortController.abort();
+      setAbortController(null);
+      setIsLoading(false);
+      setIsGenerationComplete(true);
     }
   };
 
@@ -185,19 +302,44 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
             </div>
           )}
 
-          {aiContent && (
+          {(aiContent || isLoading) && (
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                AI 生成內容
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  AI 生成內容
+                </label>
+                {isLoading && (
+                  <div className="flex items-center space-x-2 text-xs text-blue-600 dark:text-blue-400">
+                    <div className="flex space-x-1">
+                      <div className="w-1 h-1 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce"></div>
+                      <div className="w-1 h-1 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                      <div className="w-1 h-1 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                    </div>
+                    <span>正在生成中...</span>
+                    <div className="w-2 h-3 bg-blue-600 dark:bg-blue-400 animate-pulse"></div>
+                  </div>
+                )}
+              </div>
               <textarea
+                ref={textareaRef}
                 value={aiContent}
                 onChange={(e) => setAiContent(e.target.value)}
-                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white h-32 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={`w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white h-32 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  !isGenerationComplete ? 'cursor-not-allowed bg-gray-50 dark:bg-gray-800 border-blue-200 dark:border-blue-800' : ''
+                }`}
                 placeholder="AI 生成的內容會在這裡顯示..."
+                readOnly={!isGenerationComplete}
+                style={{
+                  fontFamily: 'inherit',
+                  lineHeight: '1.5',
+                  wordWrap: 'break-word'
+                }}
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                你可以在這裡編輯AI生成的內容
+                {!isGenerationComplete 
+                  ? 'AI 正在生成內容，請等待完成後再編輯...' 
+                  : '你可以在這裡編輯AI生成的內容'
+                }
               </p>
             </div>
           )}
@@ -211,20 +353,30 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
               取消
             </button>
             
-            {!aiContent ? (
-              <button
-                onClick={handleGenerate}
-                disabled={!canGenerate() || isLoading}
-                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-md font-medium transition-colors flex items-center"
-              >
+            {!aiContent || !isGenerationComplete ? (
+              <div className="flex space-x-2">
                 {isLoading && (
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
+                  <button
+                    onClick={handleCancel}
+                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md font-medium transition-colors"
+                  >
+                    停止生成
+                  </button>
                 )}
-                {isLoading ? '生成中...' : '生成內容'}
-              </button>
+                <button
+                  onClick={handleGenerate}
+                  disabled={!canGenerate() || isLoading}
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-md font-medium transition-colors flex items-center"
+                >
+                  {isLoading && (
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                  )}
+                  {isLoading ? '正在生成中...' : '開始生成'}
+                </button>
+              </div>
             ) : (
               <button
                 onClick={handleUseContent}
