@@ -5,6 +5,7 @@ import (
 	"backend/internal/models"
 	"backend/internal/pkg"
 	"backend/internal/services"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -280,11 +281,15 @@ func (r *PostRouter) CreatePost(ctx *gin.Context) {
 		return
 	}
 
-	// 創建 Post
-	tagBases := make([]models.TagBase, len(reqBody.Tags))
-	for i, tagName := range reqBody.Tags {
-		tagBases[i] = models.TagBase{Name: strings.Trim(tagName, " ")}
+	// 解析標籤
+	tagBases := make([]models.TagBase, 0)
+	tagRegex := regexp.MustCompile(`#([^\s#]+)`)
+	matchedTags := tagRegex.FindAllStringSubmatch(reqBody.Content, -1)
+	for _, match := range matchedTags {
+		tagName := match[1]
+		tagBases = append(tagBases, models.TagBase{Name: strings.Trim(tagName, " ")})
 	}
+	// 創建 Post
 	postBase := models.PostBase{
 		AuthorID: tokenData.UserID,
 		ImageURL: reqBody.ImageURL,

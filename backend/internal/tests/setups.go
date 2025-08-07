@@ -56,8 +56,7 @@ func SetupTestPost(server *gin.Engine, accessToken string) (*models.PostCreateRe
 
 	createPostReqBody := &models.PostCreateRequest{
 		ImageURL: nil,
-		Content:  "這是一個測試 Post",
-		Tags:     []string{"測試", "Post"},
+		Content:  "這是一個測試 Post #測試 #Post",
 	}
 	createPostReqBodyBuf, _ := httpUtils.ToJSONBuffer(createPostReqBody)
 	req, _ := http.NewRequest("POST", "/api/post", createPostReqBodyBuf)

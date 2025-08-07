@@ -1,12 +1,32 @@
 import {
   PostSearchParams,
   PostSearchResponse,
+  PostCreateRequest,
+  PostCreateResponse,
   ErrorResponse
 } from './models/post';
 
 const API_BASE_URL = '';
 
 class PostAPI {
+  static async createPost(request: PostCreateRequest, accessToken: string): Promise<PostCreateResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/post`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      const errorData: ErrorResponse = await response.json();
+      throw new Error(errorData.error || 'Failed to create post');
+    }
+
+    return response.json();
+  }
+
   static async searchPosts(params: PostSearchParams): Promise<PostSearchResponse> {
     const urlParams = new URLSearchParams();
     

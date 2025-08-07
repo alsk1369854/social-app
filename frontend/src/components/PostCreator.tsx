@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface PostCreatorProps {
   isLoggedIn: boolean;
@@ -6,6 +7,7 @@ interface PostCreatorProps {
 }
 
 const PostCreator: React.FC<PostCreatorProps> = ({ isLoggedIn, onCreatePost }) => {
+  const navigate = useNavigate();
   const [content, setContent] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,6 +32,9 @@ const PostCreator: React.FC<PostCreatorProps> = ({ isLoggedIn, onCreatePost }) =
   const handleTextareaClick = () => {
     if (isLoggedIn) {
       setIsExpanded(true);
+    } else {
+      // Navigate to login page when not logged in
+      navigate('/login');
     }
   };
 

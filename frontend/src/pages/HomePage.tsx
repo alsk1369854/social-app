@@ -6,6 +6,7 @@ import PostsFeed from '../components/PostsFeed';
 import { Post, Comment } from '../models/Post';
 import PostAPI from '../apis/post';
 import { PostGetPostsByKeywordResponseItem } from '../apis/models/post';
+import { parseTagsFromContent, removeTagMarkersFromContent } from '../utils/tagParser';
 
 // Mock data for demonstration
 const mockPosts: Post[] = [
@@ -136,23 +137,45 @@ const HomePage: React.FC = () => {
   };
 
   const handleCreatePost = async (content: string) => {
-    if (!state.user) return;
+    if (!state.user || !state.accessToken) return;
 
     setLoading(true);
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      // Parse tags from content
+      const tags = parseTagsFromContent(content);
+      
+      // Call the API to create the post
+      const response = await PostAPI.createPost({
+        content: removeTagMarkersFromContent(content),
+        tags,
+        imageURL: '' // Optional, can be extended later
+      }, state.accessToken);
 
-    const newPost: Post = {
-      id: Date.now().toString(),
-      content,
-      userID: state.user.id,
-      username: state.user.username,
-      createdAt: new Date().toISOString(),
-      tags: []
-    };
+      // Convert API response to Post model for local state
+      const newPost: Post = {
+        id: response.id,
+        content: response.content,
+        userID: response.authorID,
+        username: state.user.username,
+        createdAt: response.createdAt,
+        updatedAt: response.updatedAt,
+        tags: tags.map(tag => ({ id: '', name: tag })) // Map string tags to tag objects
+      };
 
-    setPosts(prevPosts => [newPost, ...prevPosts]);
-    setLoading(false);
+      // Update local posts state
+      setPosts(prevPosts => [newPost, ...prevPosts]);
+      
+      // If we're showing default posts, also update that
+      if (defaultPostsLoaded) {
+        setDefaultPosts(prevPosts => [newPost, ...prevPosts]);
+      }
+    } catch (error) {
+      console.error('Failed to create post:', error);
+      // Could show an error message to user here
+      throw error; // Re-throw so PostCreator can handle it
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAddComment = async (postId: string, content: string) => {

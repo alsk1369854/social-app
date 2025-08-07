@@ -37,3 +37,19 @@ export interface PostGetPostsByKeywordResponseItem {
 }
 
 export type PostSearchResponse = PaginationResponse<PostGetPostsByKeywordResponseItem>;
+
+export interface PostCreateRequest {
+  content: string;
+  tags: string[];
+  imageURL?: string;
+}
+
+export interface PostCreateResponse {
+  id: string;
+  authorID: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  imageURL: string;
+  tagIDs: string[];
+}
