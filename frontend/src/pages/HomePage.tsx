@@ -6,6 +6,8 @@ import PostsFeed from '../components/PostsFeed';
 import { Post, Comment } from '../models/Post';
 import PostAPI from '../apis/post';
 import { PostGetPostsByKeywordResponseItem } from '../apis/models/post';
+import CommentAPI from '../apis/comment';
+import { CommentGetListByPostIDResponseItem } from '../apis/models/comment';
 
 // Mock data for demonstration
 const mockPosts: Post[] = [
@@ -171,32 +173,73 @@ const HomePage: React.FC = () => {
   };
 
   const handleAddComment = async (postId: string, content: string) => {
-    if (!state.user) return;
+    if (!state.user || !state.accessToken) return;
 
-    setLoading(true);
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+      // Call the API to create the comment
+      const response = await CommentAPI.createComment({
+        content: content,
+        postID: postId
+      }, state.accessToken);
 
-    const newComment: Comment = {
-      id: Date.now().toString(),
-      content,
-      postID: postId,
-      userID: state.user.id,
-      username: state.user.username,
-      createdAt: new Date().toISOString()
-    };
+      console.log('Comment created successfully:', response);
 
-    setPostComments(prevComments => ({
-      ...prevComments,
-      [postId]: [...(prevComments[postId] || []), newComment]
-    }));
-    setLoading(false);
+      // Create local Comment object from API response
+      const newComment: Comment = {
+        id: response.id,
+        content: response.content,
+        postID: response.postID,
+        userID: response.userID,
+        username: state.user.username,
+        createdAt: new Date().toISOString()
+      };
+
+      // Update local comments state
+      setPostComments(prevComments => ({
+        ...prevComments,
+        [postId]: [...(prevComments[postId] || []), newComment]
+      }));
+    } catch (error) {
+      console.error('Failed to create comment:', error);
+      throw error; // Re-throw so Post component can handle it
+    }
   };
 
-  const handleLoadComments = async (_postId: string) => {
-    // In a real app, this would fetch comments from the API if they haven't been loaded yet
-    // For demo purposes, comments are already loaded
-    await new Promise(resolve => setTimeout(resolve, 300));
+  const handleLoadComments = async (postId: string) => {
+    try {
+      console.log('Loading comments for post:', postId);
+      
+      // Call the API to get comments for this post
+      const response = await CommentAPI.getCommentsByPostID(postId);
+      
+      console.log('Comments loaded successfully:', response);
+
+      // Convert API response to Comment objects
+      const convertAPICommentToComment = (apiComment: CommentGetListByPostIDResponseItem): Comment => ({
+        id: apiComment.id,
+        content: apiComment.content,
+        postID: apiComment.postID,
+        userID: apiComment.userID,
+        username: apiComment.userName,
+        createdAt: apiComment.createdAt,
+        subComments: apiComment.subComments?.map(convertAPICommentToComment) || []
+      });
+
+      const comments = response.map(convertAPICommentToComment);
+      
+      // Update local comments state
+      setPostComments(prevComments => ({
+        ...prevComments,
+        [postId]: comments
+      }));
+    } catch (error) {
+      console.error('Failed to load comments:', error);
+      // Keep existing comments or use empty array if first load fails
+      setPostComments(prevComments => ({
+        ...prevComments,
+        [postId]: prevComments[postId] || []
+      }));
+    }
   };
 
   return (

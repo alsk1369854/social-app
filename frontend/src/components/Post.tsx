@@ -162,25 +162,34 @@ const Post: React.FC<PostProps> = ({
           {/* Add Comment Form */}
           {isLoggedIn ? (
             <form onSubmit={handleSubmitComment} className="mt-4">
-              <div className="flex space-x-2 sm:space-x-3">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-500 rounded-full flex items-center justify-center text-white font-semibold text-xs">
-                  U
-                </div>
+              <div className="flex space-x-3">
                 <div className="flex-1">
                   <textarea
                     value={commentContent}
                     onChange={(e) => setCommentContent(e.target.value)}
                     placeholder="寫個留言..."
-                    className="w-full p-2 sm:p-3 border border-gray-300 dark:border-gray-600 rounded-md resize-none h-16 sm:h-20 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md resize-none h-16 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   />
-                  <div className="flex justify-end mt-2">
-                    <button
-                      type="submit"
-                      disabled={!commentContent.trim() || isSubmittingComment}
-                      className="px-3 sm:px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-md text-sm font-medium transition-colors"
-                    >
-                      {isSubmittingComment ? '提交中...' : '留言'}
-                    </button>
+                  <div className="flex justify-between items-center mt-2">
+                    <div className="text-xs text-gray-400">
+                      {commentContent.length > 0 && `${commentContent.length} 字元`}
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => setCommentContent('')}
+                        className="px-3 py-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-sm transition-colors"
+                      >
+                        清除
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={!commentContent.trim() || isSubmittingComment}
+                        className="px-3 py-1 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-md text-sm font-medium transition-colors"
+                      >
+                        {isSubmittingComment ? '發布中...' : '留言'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
