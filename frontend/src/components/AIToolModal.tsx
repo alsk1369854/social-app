@@ -232,6 +232,8 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
                   onChange={setAiContent}
                   placeholder="AI 生成的內容會在這裡顯示..."
                   disabled={isLoading}
+                  autoExpand={true}
+                  preventAutoCollapse={true}
                   className={`min-h-32 ${
                     isLoading ? 'cursor-not-allowed bg-gray-50 dark:bg-gray-800 border-blue-200 dark:border-blue-800' : ''
                   }`}

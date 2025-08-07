@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import MarkdownRenderer from './MarkdownRenderer';
-import MarkdownEditor from './MarkdownEditor';
 
 interface Comment {
   id: string;
@@ -171,11 +170,12 @@ const Post: React.FC<PostProps> = ({
           {isLoggedIn ? (
             <form onSubmit={handleSubmitComment} className="mt-4">
               <div className="mb-3">
-                <MarkdownEditor
+                <textarea
                   value={commentContent}
-                  onChange={setCommentContent}
+                  onChange={(e) => setCommentContent(e.target.value)}
                   placeholder="寫個留言..."
-                  className="min-h-16"
+                  className="w-full min-h-16 p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  rows={2}
                 />
               </div>
               <div className="flex justify-between items-center">

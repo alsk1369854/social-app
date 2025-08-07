@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MarkdownRenderer from './MarkdownRenderer';
 
 interface MarkdownEditorProps {
@@ -9,6 +9,8 @@ interface MarkdownEditorProps {
   className?: string;
   disabled?: boolean;
   onClick?: () => void;
+  autoExpand?: boolean; // Auto-expand when content is provided
+  preventAutoCollapse?: boolean; // Prevent auto-collapse on blur
 }
 
 const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
@@ -18,10 +20,19 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   maxLength,
   className = "",
   disabled = false,
-  onClick
+  onClick,
+  autoExpand = false,
+  preventAutoCollapse = false
 }) => {
   const [activeTab, setActiveTab] = useState<'write' | 'preview'>('write');
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Auto-expand when content is provided and autoExpand is true
+  useEffect(() => {
+    if (autoExpand && value.trim() && !isExpanded) {
+      setIsExpanded(true);
+    }
+  }, [value, autoExpand, isExpanded]);
 
   const handleTabChange = (tab: 'write' | 'preview') => {
     setActiveTab(tab);
@@ -33,6 +44,19 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   const handleTextareaClick = () => {
     setIsExpanded(true);
     if (onClick) onClick();
+  };
+
+  const handleTextareaBlur = () => {
+    // Don't auto-collapse if preventAutoCollapse is true
+    if (preventAutoCollapse) return;
+    
+    // Use setTimeout to allow for tab clicks and other interactions to complete
+    setTimeout(() => {
+      // Only collapse if the textarea is empty and we're still on write tab
+      if (!value.trim() && activeTab === 'write') {
+        setIsExpanded(false);
+      }
+    }, 150);
   };
 
   const remainingChars = maxLength ? maxLength - value.length : null;
@@ -77,12 +101,14 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               value={value}
               onChange={(e) => onChange(e.target.value)}
               onClick={handleTextareaClick}
+              onBlur={handleTextareaBlur}
               disabled={disabled}
               maxLength={maxLength}
               placeholder={placeholder}
-              className={`w-full p-3 sm:p-4 border-0 bg-transparent resize-y text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+              className={`w-full p-3 sm:p-4 border-0 bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
                 disabled ? 'cursor-not-allowed opacity-50' : ''
-              } ${isExpanded ? 'h-32 sm:h-36 rounded-b-md' : 'h-12 sm:h-14 rounded-md'}`}
+              } ${isExpanded ? 'min-h-32 sm:min-h-36 resize-y rounded-b-md' : 'h-12 sm:h-14 resize-none rounded-md'}`}
+              style={{ resize: isExpanded ? 'vertical' : 'none' }}
             />
             {isExpanded && remainingChars !== null && (
               <div className="absolute bottom-2 right-2 text-xs text-gray-400 bg-white dark:bg-gray-700 px-2 py-1 rounded">
@@ -91,7 +117,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
             )}
           </>
         ) : (
-          <div className="p-3 sm:p-4 min-h-32 rounded-b-md">
+          <div className="p-3 sm:p-4 min-h-32 max-h-96 overflow-y-auto rounded-b-md">
             {value.trim() ? (
               <MarkdownRenderer content={value} showPreview={true} />
             ) : (
@@ -103,11 +129,27 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         )}
       </div>
 
-      {/* Markdown Help Text */}
+      {/* Markdown Help Icon */}
       {isExpanded && (
         <div className="border-t border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 px-3 py-2 rounded-b-md">
-          <div className="text-xs text-gray-500 dark:text-gray-400">
-            支援 Markdown 語法：**粗體** *斜體* ~~刪除線~~ `代碼` [連結](url) &gt; 引用 - 列表
+          <div className="flex items-center justify-end">
+            <div className="group relative">
+              <svg 
+                className="w-4 h-4 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 cursor-help transition-colors" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {/* Tooltip */}
+              <div className="absolute bottom-full right-0 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                <div className="bg-gray-900 dark:bg-gray-700 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
+                  支援 Markdown：**粗體** *斜體* `代碼` [連結](url) &gt; 引用
+                  <div className="absolute top-full right-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900 dark:border-t-gray-700"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
