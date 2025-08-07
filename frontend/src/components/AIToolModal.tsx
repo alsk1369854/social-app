@@ -324,7 +324,7 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
                 ref={textareaRef}
                 value={aiContent}
                 onChange={(e) => setAiContent(e.target.value)}
-                className={`w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white h-32 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                className={`w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white h-32 resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                   !isGenerationComplete ? 'cursor-not-allowed bg-gray-50 dark:bg-gray-800 border-blue-200 dark:border-blue-800' : ''
                 }`}
                 placeholder="AI 生成的內容會在這裡顯示..."

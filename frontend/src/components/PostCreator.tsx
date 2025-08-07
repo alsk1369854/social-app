@@ -14,7 +14,7 @@ const PostCreator: React.FC<PostCreatorProps> = ({ isLoggedIn, onCreatePost }) =
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
-  const maxLength = 300;
+  const maxLength = 500;
   const remainingChars = maxLength - content.length;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,7 +69,7 @@ const PostCreator: React.FC<PostCreatorProps> = ({ isLoggedIn, onCreatePost }) =
             maxLength={maxLength}
             className={`w-full p-3 sm:p-4 border border-gray-300 dark:border-gray-600 rounded-md resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
               !isLoggedIn ? 'cursor-not-allowed opacity-50' : ''
-            } ${isExpanded ? 'h-32 sm:h-36' : 'h-12 sm:h-14'}`}
+            } ${isExpanded ? 'h-96 sm:h-96' : 'h-12 sm:h-14'}`}
             placeholder={isLoggedIn ? "分享你的想法..." : "請先登入以發布貼文"}
           />
         </div>
