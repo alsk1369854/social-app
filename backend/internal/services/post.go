@@ -76,3 +76,7 @@ func (s *PostService) LikedByUser(ctx *gin.Context, postID uuid.UUID, userID uui
 func (s *PostService) GetList(ctx *gin.Context, pagination *models.Pagination) ([]models.Post, uint, error) {
 	return s.PostRepository.GetList(ctx, pagination)
 }
+
+func (s *PostService) GetListByKeywords(ctx *gin.Context, keywords []string, pagination *models.Pagination) ([]models.Post, uint, error) {
+	return s.PostRepository.GetListByKeywords(ctx, keywords, pagination)
+}

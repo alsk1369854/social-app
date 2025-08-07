@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
 import PostCreator from '../components/PostCreator';
@@ -72,14 +72,43 @@ const convertAPIPostToPost = (apiPost: PostGetPostsByKeywordResponseItem): Post 
 const HomePage: React.FC = () => {
   const { state, logout } = useAuth();
   const [posts, setPosts] = useState<Post[]>(mockPosts);
+  const [defaultPosts, setDefaultPosts] = useState<Post[]>([]);
   const [postComments, setPostComments] = useState<Record<string, Comment[]>>(mockComments);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Post[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [defaultPostsLoaded, setDefaultPostsLoaded] = useState(false);
 
-  // Use search results when searching, otherwise use regular posts
-  const displayedPosts = searchQuery.trim() ? searchResults : posts;
+  // Use search results when searching, otherwise use default posts from API
+  const displayedPosts = searchQuery.trim() ? searchResults : (defaultPostsLoaded ? defaultPosts : posts);
+
+  const loadDefaultPosts = async () => {
+    try {
+      setLoading(true);
+      const response = await PostAPI.searchPosts({
+        keyword: '',
+        limit: '20',
+        offset: '0'
+      });
+      
+      const convertedPosts = response.data.map(convertAPIPostToPost);
+      setDefaultPosts(convertedPosts);
+      setDefaultPostsLoaded(true);
+    } catch (error) {
+      console.error('Failed to load default posts:', error);
+      // If API fails, use mock posts as fallback
+      setDefaultPosts(mockPosts);
+      setDefaultPostsLoaded(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load default posts on component mount
+  useEffect(() => {
+    loadDefaultPosts();
+  }, []);
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
@@ -174,7 +203,14 @@ const HomePage: React.FC = () => {
               )}
             </p>
             <button
-              onClick={() => setSearchQuery('')}
+              onClick={() => {
+                setSearchQuery('');
+                setSearchResults([]);
+                // Optionally refresh default posts when clearing search
+                if (!defaultPostsLoaded) {
+                  loadDefaultPosts();
+                }
+              }}
               className="mt-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 underline text-sm"
             >
               清除搜尋

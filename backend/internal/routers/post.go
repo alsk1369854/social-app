@@ -76,7 +76,7 @@ func (r *PostRouter) Bind(_router *gin.RouterGroup) {
 // @Failure 500 {object} models.ErrorResponse
 // @Router /api/post/list/search [get]
 func (r *PostRouter) GetPostsByKeyword(ctx *gin.Context) {
-	// keyword := ctx.Query("keyword")
+	keyword := ctx.Query("keyword")
 	offset, err := strconv.ParseUint(ctx.DefaultQuery("offset", "0"), 10, 64)
 	if err != nil {
 		ctx.JSON(400, models.ErrorResponse{Error: "invalid offset"})
@@ -107,7 +107,7 @@ func (r *PostRouter) GetPostsByKeyword(ctx *gin.Context) {
 		Offset: uint(offset),
 		Limit:  uint(limit),
 	}
-	posts, totalCount, err := r.PostService.GetList(ctx, pagination)
+	posts, totalCount, err := r.PostService.GetListByKeywords(ctx, []string{keyword}, pagination)
 	if err != nil {
 		ctx.JSON(500, models.ErrorResponse{Error: err.Error()})
 		return
