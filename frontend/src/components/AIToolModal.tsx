@@ -272,13 +272,22 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
                 開始生成
               </button>
             ) : aiContent && !isLoading ? (
-              <button
-                onClick={handleUseContent}
-                disabled={!aiContent.trim()}
-                className="px-4 py-2 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white rounded-md font-medium transition-colors"
-              >
-                使用此內容
-              </button>
+              <div className="flex space-x-2">
+                <button
+                  onClick={handleGenerate}
+                  disabled={!canGenerate()}
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-md font-medium transition-colors"
+                >
+                  重新生成
+                </button>
+                <button
+                  onClick={handleUseContent}
+                  disabled={!aiContent.trim()}
+                  className="px-4 py-2 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white rounded-md font-medium transition-colors"
+                >
+                  使用此內容
+                </button>
+              </div>
             ) : isLoading ? (
               <button
                 onClick={handleGenerate}
