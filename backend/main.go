@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
 	_ "backend/docs"
@@ -71,6 +72,11 @@ func main() {
 	routers.NewUserRouter().Bind(apiRouter)
 	routers.NewPostRouter().Bind(apiRouter)
 	routers.NewCommentRouter().Bind(apiRouter)
+
+	server.Static("/public", "./public")
+	server.GET("/", func(ctx *gin.Context) {
+		ctx.File("./public/index.html")
+	})
 
 	// Setup AI Router
 	routers.NewAIRouter(&models.AIModelConfigs{
