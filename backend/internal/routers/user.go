@@ -138,7 +138,7 @@ func (r *UserRouter) Register(ctx *gin.Context) {
 			Email:    reqBody.Email,
 			Password: reqBody.Password,
 		}),
-		// Role: models.RoleNormalCustomer,
+		Role: models.RoleNormalCustomer,
 	}
 	var addressBase *models.AddressBase
 	if reqBody.Address != nil {

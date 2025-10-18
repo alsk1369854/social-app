@@ -2,12 +2,10 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
 	_ "backend/docs"
@@ -40,7 +38,7 @@ func main() {
 		port = "28080"
 	}
 	debug := false
-	for _, temp := range []string{"true", "1", "TRUE", "True"} {
+	for _, temp := range []string{"1", "true"} {
 		if temp == strings.ToLower(os.Getenv("DEBUG_MODE")) {
 			debug = true
 			break
@@ -52,14 +50,6 @@ func main() {
 	flag.StringVar(&port, "port", port, "Port for the server")
 	flag.BoolVar(&debug, "debug", debug, "Enable debug mode")
 	flag.Parse()
-
-	fmt.Printf("%v, %v, %v,\n", host, port, debug)
-
-	if debug {
-		gin.SetMode(gin.DebugMode)
-	} else {
-		gin.SetMode(gin.ReleaseMode)
-	}
 
 	// Connect to database
 	db := database.SetupPostgres(&database.PostgresConfig{
@@ -73,7 +63,10 @@ func main() {
 	})
 
 	// Setup Gin server
-	server, apiRouter := servers.SetupGin(&servers.GinConfig{DB: db})
+	server, apiRouter := servers.SetupGin(&servers.GinConfig{
+		DB:    db,
+		Debug: debug,
+	})
 	routers.NewCityRouter().Bind(apiRouter)
 	routers.NewUserRouter().Bind(apiRouter)
 	routers.NewPostRouter().Bind(apiRouter)

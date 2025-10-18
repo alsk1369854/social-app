@@ -53,8 +53,32 @@ func createAdminUser(db *gorm.DB, email string, password string) (*models.User, 
 	username := matches[1]
 
 	// 刪除現有的管理員帳號
-	if err := db.Where("role = ?", models.RoleAdmin).Delete(&models.User{}).Error; err != nil {
+	admins := []models.User{}
+	if err := db.Where("role = ?", models.RoleAdmin).Find(&admins).Error; err != nil {
 		return nil, err
+	}
+	for _, admin := range admins {
+		posts := []models.Post{}
+		if err := db.Where("author_id = ?", admin.ID).Find(&posts).Error; err != nil {
+			return nil, err
+		}
+		for _, post := range posts {
+			if err := db.Where("post_id = ?", post.ID).Delete(&models.Comment{}).Error; err != nil {
+				return nil, err
+			}
+			if err := db.Model(&post).Association("Tags").Clear(); err != nil {
+				return nil, err
+			}
+			if err := db.Model(&post).Association("Likes").Clear(); err != nil {
+				return nil, err
+			}
+			if err := db.Where("id = ?", post.ID).Delete(&models.Post{}).Error; err != nil {
+				return nil, err
+			}
+		}
+		if err := db.Where("id = ?", admin.ID).Delete(&models.User{}).Error; err != nil {
+			return nil, err
+		}
 	}
 
 	// 檢查是否已存在相同 email 的使用者
