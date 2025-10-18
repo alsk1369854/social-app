@@ -1,37 +1,51 @@
-# Build stage
-FROM golang:1.21-alpine AS builder
+# Frontend build stage
+FROM node:20-alpine AS frontend-builder
 
-# Install build dependencies
-RUN apk add --no-cache git
+WORKDIR /app/frontend
+
+# Copy frontend package files
+COPY frontend/package*.json ./
+
+# Install frontend dependencies
+RUN npm ci
+
+# Copy frontend source code
+COPY frontend ./
+
+# Build frontend
+RUN npm run build
+
+# Backend build stage
+FROM golang:tip-alpine3.22 AS backend-builder
 
 # Set working directory
 WORKDIR /app
 
 # Copy go mod files
-COPY go.mod go.sum ./
+COPY backend/go.mod backend/go.sum ./
 
 # Download dependencies
 RUN go mod download
 
 # Copy source code
-COPY . .
+COPY backend ./
 
 # Build the application for Linux AMD64
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main-linux-amd64 .
 
 # Final stage
-FROM alpine:latest
-
-# Install ca-certificates for HTTPS requests
-RUN apk --no-cache add ca-certificates
+FROM golang:tip-alpine3.22
 
 WORKDIR /root/
 
-# Copy the binary from builder
-COPY --from=builder /app/main-linux-amd64 .
+# Copy the binary from backend builder
+COPY --from=backend-builder /app/main-linux-amd64 .
+
+# Copy frontend build files to public directory
+COPY --from=frontend-builder /app/frontend/build ./public
 
 # Expose port (adjust if your Gin server uses a different port)
 EXPOSE 8080
 
 # Run the binary
-CMD ["./main-linux-amd64"]
+CMD ["./main-linux-amd64", "--host=0.0.0.0", "--port=8080"]

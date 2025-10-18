@@ -25,8 +25,11 @@ import (
 // @basePath /api
 func main() {
 	// Load environment variables from .env file
-	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Failed to load .env file: %v", err)
+	if _, err := os.Stat(".env"); err == nil {
+		log.Println("@@int")
+		if err := godotenv.Load(".env"); err != nil {
+			log.Printf("Failed to load .env file: %v\n", err)
+		}
 	}
 
 	// default values

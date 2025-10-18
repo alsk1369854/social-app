@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -36,8 +37,10 @@ func SetupPostgres(cfg *PostgresConfig) *gorm.DB {
 	}
 
 	db, err := gorm.Open(postgres.Open(dsn), gormCfg)
-	if err != nil {
-		log.Fatal("Failed to connect to PostgreSQL database:", err)
+	for err != nil {
+		log.Printf("Failed to connect to PostgreSQL database: %v\n", err)
+		time.Sleep(2 * time.Second)
+		db, err = gorm.Open(postgres.Open(dsn), gormCfg)
 	}
 	if err := Migrate(db); err != nil {
 		log.Fatal("Failed to migrate database:", err)

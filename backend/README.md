@@ -60,6 +60,7 @@ go get gorm.io/driver/postgres
 go get gorm.io/driver/sqlite
 
 # swagger
+go get github.com/swaggo/swag@latest 
 go get github.com/swaggo/files
 go get github.com/swaggo/gin-swagger
 
