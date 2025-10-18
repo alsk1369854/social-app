@@ -4,6 +4,7 @@ import (
 	"backend/internal/models"
 	"backend/internal/pkg"
 	"errors"
+	"os"
 	"regexp"
 
 	"github.com/google/uuid"
@@ -26,9 +27,12 @@ func Migrate(db *gorm.DB) error {
 	}
 
 	// 創建管理員帳號
-	_, err := createAdminUser(db, "admin@example.com", "admin@admin")
-	if err != nil {
-		return err
+
+	if adminEmail, adminPassword := os.Getenv("ADMIN_EMAIL"), os.Getenv("ADMIN_PASSWORD"); adminEmail != "" && adminPassword != "" {
+		_, err := createAdminUser(db, adminEmail, adminPassword)
+		if err != nil {
+			return err
+		}
 	}
 
 	// 預設創建，台北到台南的 city 資料
@@ -48,26 +52,18 @@ func createAdminUser(db *gorm.DB, email string, password string) (*models.User, 
 	}
 	username := matches[1]
 
-	var user models.User
-	err := db.Where("email = ?", email).First(&user).Error
-
-	if err == nil {
-		// 使用者已存在，更新密碼
-		user.HashedPassword = cryptoUtils.GeneratePasswordHash(&pkg.CryptoUtilsPasswordHashInput{
-			Email:    email,
-			Password: password,
-		})
-		if err := db.Save(&user).Error; err != nil {
-			return nil, err
-		}
-		return &user, nil
-	}
-
-	if !errors.Is(err, gorm.ErrRecordNotFound) {
+	// 刪除現有的管理員帳號
+	if err := db.Where("role = ?", models.RoleAdmin).Delete(&models.User{}).Error; err != nil {
 		return nil, err
 	}
 
-	// 使用者不存在，建立新帳號
+	// 檢查是否已存在相同 email 的使用者
+	user := &models.User{}
+	if err := db.Where("email = ?", email).First(user).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	// 建立管理帳號
 	newUser := &models.User{
 		TableModel: models.TableModel{ID: uuid.New()},
 		UserBase: models.UserBase{
@@ -79,7 +75,6 @@ func createAdminUser(db *gorm.DB, email string, password string) (*models.User, 
 			}),
 		},
 	}
-
 	if err := db.Create(newUser).Error; err != nil {
 		return nil, err
 	}

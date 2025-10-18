@@ -1,6 +1,15 @@
 package models
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
+
+type Role int64
+
+const (
+	RoleAdmin Role = iota
+	RoleNormalCustomer
+)
 
 type User struct {
 	TableModel
@@ -15,6 +24,7 @@ type UserBase struct {
 	AddressID      *uuid.UUID
 	Address        *Address `gorm:"foreignKey:AddressID"`
 	Likes          []*Post  `gorm:"many2many:post_to_user;"`
+	Role           Role     `gorm:"not null"`
 }
 
 // User Register structs

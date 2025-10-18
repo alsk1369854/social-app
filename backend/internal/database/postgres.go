@@ -31,6 +31,8 @@ func SetupPostgres(cfg *PostgresConfig) *gorm.DB {
 	gormCfg := &gorm.Config{}
 	if cfg.EnableLog {
 		gormCfg.Logger = logger.Default.LogMode(logger.Info)
+	} else {
+		gormCfg.Logger = logger.Default.LogMode(logger.Silent)
 	}
 
 	db, err := gorm.Open(postgres.Open(dsn), gormCfg)

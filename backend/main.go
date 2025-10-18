@@ -2,9 +2,12 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
+	"strings"
 
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
 	_ "backend/docs"
@@ -22,18 +25,40 @@ import (
 // @name Authorization
 // @basePath /api
 func main() {
-	// Command line flags for host and port
-	var host string
-	var port string
-	var debug bool
-	flag.StringVar(&host, "host", "0.0.0.0", "Host for the server")
-	flag.StringVar(&port, "port", "28080", "Port for the server")
-	flag.BoolVar(&debug, "debug", true, "Enable debug mode")
-	flag.Parse()
-
 	// Load environment variables from .env file
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("Failed to load .env file: %v", err)
+	}
+
+	// default values
+	host := os.Getenv("SERVER_HOST")
+	if host == "" {
+		host = "0.0.0.0"
+	}
+	port := os.Getenv("SERVER_PORT")
+	if port == "" {
+		port = "28080"
+	}
+	debug := false
+	for _, temp := range []string{"true", "1", "TRUE", "True"} {
+		if temp == strings.ToLower(os.Getenv("DEBUG_MODE")) {
+			debug = true
+			break
+		}
+	}
+
+	// Command line flags for host and port
+	flag.StringVar(&host, "host", host, "Host for the server")
+	flag.StringVar(&port, "port", port, "Port for the server")
+	flag.BoolVar(&debug, "debug", debug, "Enable debug mode")
+	flag.Parse()
+
+	fmt.Printf("%v, %v, %v,\n", host, port, debug)
+
+	if debug {
+		gin.SetMode(gin.DebugMode)
+	} else {
+		gin.SetMode(gin.ReleaseMode)
 	}
 
 	// Connect to database
@@ -44,7 +69,7 @@ func main() {
 		Password:  os.Getenv("DB_PASSWORD"),
 		DBName:    os.Getenv("DB_NAME"),
 		Timezone:  "Asia/Taipei",
-		EnableLog: true,
+		EnableLog: debug,
 	})
 
 	// Setup Gin server
