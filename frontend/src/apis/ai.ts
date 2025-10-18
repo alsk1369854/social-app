@@ -60,10 +60,16 @@ class AIAPI {
         const { done, value } = await reader.read()
         if (done) break
         const event = decoder.decode(value, { stream: true });
+        console.log(event)
         const chunks = event.split("data: ")
         for (const chunk of chunks) {
           const data = chunk.substring(0, chunk.length - 2)
           if (data === "[DONE]") {
+            if (onComplete) onComplete()
+            return
+          }
+          if (data.startsWith("[ERROR]")) {
+            if (onError) onError("server busy please try again later");
             if (onComplete) onComplete()
             return
           }
@@ -131,6 +137,11 @@ class AIAPI {
         for (const chunk of chunks) {
           const data = chunk.substring(0, chunk.length - 2)
           if (data === "[DONE]") {
+            if (onComplete) onComplete()
+            return
+          }
+          if (data.startsWith("[ERROR]")) {
+            if (onError) onError("server busy please try again later");
             if (onComplete) onComplete()
             return
           }

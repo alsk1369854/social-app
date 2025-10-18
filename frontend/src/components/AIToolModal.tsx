@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import AIAPI from '../apis/ai';
 import MarkdownEditor from './MarkdownEditor';
+import MDEditor from '@uiw/react-md-editor';
 
 interface AIToolModalProps {
   isOpen: boolean;
@@ -193,7 +194,15 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
               <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
             </div>
           )}
-
+          <MDEditor
+            value={aiContent}
+            height="100%"
+            autoFocus={true}
+            autoFocusEnd={true}
+            visibleDragbar={true}
+            onChange={(value) => setAiContent(value || '')}
+          />
+          <MDEditor.Markdown source={aiContent} />
           {(aiContent || isLoading) && (
             <div className="mb-6">
               <div className="flex items-center justify-between mb-2">
@@ -212,6 +221,7 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
                 )}
               </div>
               <div className="relative">
+
                 <MarkdownEditor
                   value={aiContent}
                   onChange={setAiContent}

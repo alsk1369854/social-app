@@ -7,6 +7,7 @@ import (
 	"backend/internal/services"
 	"fmt"
 	"log"
+	"slices"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -92,7 +93,7 @@ func (r *AIRouter) CreatePostContentStream(ctx *gin.Context) {
 			// if err != nil {
 			// 	return err
 			// }
-			if _, err := ctx.Writer.Write(append(append([]byte("data: "), chunk...), []byte("\n\n")...)); err != nil {
+			if _, err := ctx.Writer.Write(slices.Concat([]byte("data: "), []byte(chunk), []byte("\n\n"))); err != nil {
 				return err
 			}
 			// formatted := fmt.Sprintf("data: %s\n\n", chunk)
@@ -103,9 +104,9 @@ func (r *AIRouter) CreatePostContentStream(ctx *gin.Context) {
 			return nil
 		},
 	); err != nil {
-		// fmt.Fprintf(ctx.Writer, "data: [ERROR]\ndata: %s\n\n", err.Error())
-		// ctx.Writer.Flush()
-		// return
+		ctx.Writer.Write(slices.Concat([]byte("data: [ERROR]"), []byte(err.Error()), []byte("\n\n")))
+		ctx.Writer.Flush()
+		return
 	}
 
 	// 結束訊號
