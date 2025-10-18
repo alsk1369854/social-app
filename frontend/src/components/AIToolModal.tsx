@@ -60,44 +60,31 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
     setError(null);
     setAiContent('');
 
-    try {
-      let response;
-      if (mode === 'create') {
-        response = await AIAPI.createPostContent(
-          { topic: topic.trim(), style: style.trim() },
-          state.accessToken
-        );
-      } else {
-        response = await AIAPI.optimizeContent(
-          { context: currentContent.trim(), style: style.trim() },
-          state.accessToken
-        );
-      }
-      
-      setAiContent(response.content || '');
-      
-    } catch (err) {
-      // Handle errors
-      if (err instanceof Error) {
-        let errorMessage = '';
-        if (err.message.includes('401') || err.message.includes('unauthorized')) {
-          errorMessage = '登入已過期，請重新登入';
-        } else if (err.message.includes('400') || err.message.includes('Bad Request')) {
-          errorMessage = '請求參數錯誤，請檢查輸入內容';
-        } else if (err.message.includes('500') || err.message.includes('Internal Server Error')) {
-          errorMessage = '伺服器錯誤，請稍後再試';
-        } else if (err.message.includes('network') || err.message.includes('fetch')) {
-          errorMessage = '網路連接錯誤，請檢查網路連接';
-        } else {
-          errorMessage = err.message;
-        }
-        setError(errorMessage);
-      } else {
-        setError('生成內容時發生未知錯誤');
-      }
-    } finally {
+    const onChunk = (chunk: string) => { setAiContent((prev) => prev + chunk) }
+    const onComplete = () => { setIsLoading(false) }
+    const onError = (streamError: string) => {
       setIsLoading(false);
+      setError(streamError);
     }
+    if (mode === 'create') {
+      await AIAPI.createPostContentStream(
+        { topic: topic.trim(), style: style.trim() },
+        state.accessToken,
+        onChunk,
+        onComplete,
+        onError
+      );
+    } else {
+      await AIAPI.createPostContentStream(
+        { topic: currentContent.trim(), style: style.trim() },
+        state.accessToken,
+        onChunk,
+        onComplete,
+        onError
+      );
+    }
+
+    setIsLoading(false);
   };
 
 
@@ -133,21 +120,19 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
             <div className="flex space-x-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
               <button
                 onClick={() => setMode('create')}
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  mode === 'create'
-                    ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm'
-                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
-                }`}
+                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${mode === 'create'
+                  ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                  }`}
               >
                 文章創作
               </button>
               <button
                 onClick={() => setMode('optimize')}
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  mode === 'optimize'
-                    ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm'
-                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
-                }`}
+                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${mode === 'optimize'
+                  ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                  }`}
               >
                 內容轉換
               </button>
@@ -219,8 +204,8 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
                   <div className="flex items-center space-x-2 text-xs text-blue-600 dark:text-blue-400">
                     <div className="flex space-x-1">
                       <div className="w-1 h-1 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce"></div>
-                      <div className="w-1 h-1 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                      <div className="w-1 h-1 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                      <div className="w-1 h-1 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-1 h-1 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                     </div>
                     <span>正在生成中...</span>
                   </div>
@@ -234,14 +219,13 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
                   disabled={isLoading}
                   autoExpand={true}
                   preventAutoCollapse={true}
-                  className={`min-h-32 ${
-                    isLoading ? 'cursor-not-allowed bg-gray-50 dark:bg-gray-800 border-blue-200 dark:border-blue-800' : ''
-                  }`}
+                  className={`min-h-32 ${isLoading ? 'cursor-not-allowed bg-gray-50 dark:bg-gray-800 border-blue-200 dark:border-blue-800' : ''
+                    }`}
                 />
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {isLoading 
-                  ? 'AI 正在生成內容，請等待完成後再編輯...' 
+                {isLoading
+                  ? 'AI 正在生成內容，請等待完成後再編輯...'
                   : '你可以在這裡編輯AI生成的內容'
                 }
               </p>
@@ -256,7 +240,7 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
             >
               取消
             </button>
-            
+
             {!aiContent && !isLoading ? (
               <button
                 onClick={handleGenerate}

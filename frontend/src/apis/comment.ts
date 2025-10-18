@@ -9,7 +9,6 @@ const API_BASE_URL = '';
 
 class CommentAPI {
   static async createComment(request: CommentCreateRequest, accessToken: string): Promise<CommentCreateResponse> {
-    console.log('Making POST request to /api/comment with token:', accessToken);
     const response = await fetch(`${API_BASE_URL}/api/comment`, {
       method: 'POST',
       headers: {
@@ -35,7 +34,6 @@ class CommentAPI {
   }
 
   static async getCommentsByPostID(postID: string): Promise<CommentGetListByPostIDResponseItem[]> {
-    console.log('Making GET request to /api/comment/list/post/' + postID);
     const response = await fetch(`${API_BASE_URL}/api/comment/list/post/${postID}`, {
       method: 'GET',
       headers: {

@@ -93,7 +93,7 @@ const HomePage: React.FC = () => {
         limit: '20',
         offset: '0'
       });
-      
+
       const convertedPosts = response.data.map(convertAPIPostToPost);
       setDefaultPosts(convertedPosts);
       setDefaultPostsLoaded(true);
@@ -114,7 +114,7 @@ const HomePage: React.FC = () => {
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
-    
+
     if (query.trim()) {
       setIsSearching(true);
       try {
@@ -123,7 +123,7 @@ const HomePage: React.FC = () => {
           limit: '10',
           offset: '0'
         });
-        
+
         const convertedPosts = response.data.map(convertAPIPostToPost);
         setSearchResults(convertedPosts);
       } catch (error) {
@@ -139,12 +139,6 @@ const HomePage: React.FC = () => {
 
   const handleCreatePost = async (content: string) => {
     if (!state.user || !state.accessToken) return;
-
-    console.log('Creating post with token:', state.accessToken); // Debug token
-    console.log('User state:', state.user);
-    console.log('Is authenticated:', state.isAuthenticated);
-    console.log('LocalStorage token:', localStorage.getItem('accessToken'));
-    console.log('LocalStorage user:', localStorage.getItem('user'));
     setLoading(true);
     try {
       // Call the API to create the post (backend will handle tag parsing)
@@ -156,11 +150,9 @@ const HomePage: React.FC = () => {
       // After successful post creation, refresh the current view
       if (searchQuery.trim()) {
         // If we're currently searching, re-execute the search to get updated results
-        console.log('Refreshing search results for query:', searchQuery);
         await handleSearch(searchQuery);
       } else {
         // If we're showing default posts, reload the default posts list
-        console.log('Refreshing default posts list');
         await loadDefaultPosts();
       }
     } catch (error) {
@@ -182,7 +174,6 @@ const HomePage: React.FC = () => {
         postID: postId
       }, state.accessToken);
 
-      console.log('Comment created successfully:', response);
 
       // Create local Comment object from API response
       const newComment: Comment = {
@@ -207,12 +198,10 @@ const HomePage: React.FC = () => {
 
   const handleLoadComments = async (postId: string) => {
     try {
-      console.log('Loading comments for post:', postId);
-      
+
       // Call the API to get comments for this post
       const response = await CommentAPI.getCommentsByPostID(postId);
-      
-      console.log('Comments loaded successfully:', response);
+
 
       // Convert API response to Comment objects
       const convertAPICommentToComment = (apiComment: CommentGetListByPostIDResponseItem): Comment => ({
@@ -226,7 +215,7 @@ const HomePage: React.FC = () => {
       });
 
       const comments = response.map(convertAPICommentToComment);
-      
+
       // Update local comments state
       setPostComments(prevComments => ({
         ...prevComments,
@@ -249,7 +238,7 @@ const HomePage: React.FC = () => {
         onSearch={handleSearch}
         onLogoutClick={logout}
       />
-      
+
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {searchQuery && (
           <div className="mb-4 sm:mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 sm:p-4">
@@ -265,7 +254,6 @@ const HomePage: React.FC = () => {
                 setSearchQuery('');
                 setSearchResults([]);
                 // Always refresh default posts when clearing search to ensure latest data
-                console.log('Clearing search and refreshing default posts');
                 await loadDefaultPosts();
               }}
               className="mt-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 underline text-sm"
@@ -274,12 +262,12 @@ const HomePage: React.FC = () => {
             </button>
           </div>
         )}
-        
+
         <PostCreator
           isLoggedIn={!!state.user}
           onCreatePost={handleCreatePost}
         />
-        
+
         <PostsFeed
           posts={displayedPosts}
           postComments={postComments}

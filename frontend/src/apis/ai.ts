@@ -1,3 +1,4 @@
+import { on } from 'events';
 import {
   AIGenerateTextCreatePostContentRequest,
   AIGenerateTextCreatePostContentResponse,
@@ -6,7 +7,7 @@ import {
   ErrorResponse
 } from './models/ai';
 
-const API_BASE_URL = '';
+const API_BASE_URL = 'http://localhost:28080';
 
 class AIAPI {
   static async createPostContent(request: AIGenerateTextCreatePostContentRequest, accessToken: string): Promise<AIGenerateTextCreatePostContentResponse> {
@@ -32,7 +33,7 @@ class AIAPI {
   }
 
   static async createPostContentStream(
-    request: AIGenerateTextCreatePostContentRequest, 
+    request: AIGenerateTextCreatePostContentRequest,
     accessToken: string,
     onChunk: (chunk: string) => void,
     onComplete?: () => void,
@@ -47,63 +48,30 @@ class AIAPI {
       body: JSON.stringify(request),
     });
 
-    if (!response.ok) {
-      try {
-        const errorData: ErrorResponse = await response.json();
-        throw new Error(errorData.error || 'Failed to create AI content stream');
-      } catch (jsonError) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
+    if (!response.ok || !response.body) {
+      if (onError) { onError("sse connection failed"); }
+      return;
     }
 
-    const reader = response.body?.getReader();
+    const reader = response.body.getReader();
     const decoder = new TextDecoder();
-
-    if (!reader) {
-      throw new Error('Failed to get response reader');
-    }
-
     try {
-      let buffer = '';
-      let isCompleted = false;
-      
       while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        const chunk = decoder.decode(value, { stream: true });
-        buffer += chunk;
-        
-        let lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-        
-        for (const line of lines) {
-          if (line.trim() === 'event: [DONE]') {
-            isCompleted = true;
-            if (onComplete) onComplete();
-            return;
+        const { done, value } = await reader.read()
+        if (done) break
+        const event = decoder.decode(value, { stream: true });
+        const chunks = event.split("data: ")
+        for (const chunk of chunks) {
+          const data = chunk.substring(0, chunk.length - 2)
+          if (data === "[DONE]") {
+            if (onComplete) onComplete()
+            return
           }
-          
-          if (line.trim() === 'event: [ERROR]') {
-            continue;
-          }
-          
-          if (line.startsWith('data: ')) {
-            const content = line.substring(6);
-            
-            if (content && content !== '' && !content.includes('[ERROR]')) {
-              // Convert escaped newlines to actual newlines
-              const formattedContent = content.replace(/\\n/g, '\n');
-              onChunk(formattedContent);
-            }
-          }
+          onChunk(data)
         }
       }
-      
-      if (!isCompleted && onComplete) {
-        onComplete();
-      }
-      
+    } catch (error) {
+      if (onError) onError((error as Error).message);
     } finally {
       reader.releaseLock();
     }
@@ -132,7 +100,7 @@ class AIAPI {
   }
 
   static async optimizeContentStream(
-    request: AIGenerateTextContentOptimizationRequest, 
+    request: AIGenerateTextContentOptimizationRequest,
     accessToken: string,
     onChunk: (chunk: string) => void,
     onComplete?: () => void,
@@ -147,63 +115,30 @@ class AIAPI {
       body: JSON.stringify(request),
     });
 
-    if (!response.ok) {
-      try {
-        const errorData: ErrorResponse = await response.json();
-        throw new Error(errorData.error || 'Failed to optimize content stream');
-      } catch (jsonError) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
+    if (!response.ok || !response.body) {
+      if (onError) { onError("sse connection failed"); }
+      return;
     }
 
-    const reader = response.body?.getReader();
+    const reader = response.body.getReader();
     const decoder = new TextDecoder();
-
-    if (!reader) {
-      throw new Error('Failed to get response reader');
-    }
-
     try {
-      let buffer = '';
-      let isCompleted = false;
-      
       while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        const chunk = decoder.decode(value, { stream: true });
-        buffer += chunk;
-        
-        let lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-        
-        for (const line of lines) {
-          if (line.trim() === 'event: [DONE]') {
-            isCompleted = true;
-            if (onComplete) onComplete();
-            return;
+        const { done, value } = await reader.read()
+        if (done) break
+        const event = decoder.decode(value, { stream: true });
+        const chunks = event.split("data: ")
+        for (const chunk of chunks) {
+          const data = chunk.substring(0, chunk.length - 2)
+          if (data === "[DONE]") {
+            if (onComplete) onComplete()
+            return
           }
-          
-          if (line.trim() === 'event: [ERROR]') {
-            continue;
-          }
-          
-          if (line.startsWith('data: ')) {
-            const content = line.substring(6);
-            
-            if (content && content !== '' && !content.includes('[ERROR]')) {
-              // Convert escaped newlines to actual newlines
-              const formattedContent = content.replace(/\\n/g, '\n');
-              onChunk(formattedContent);
-            }
-          }
+          onChunk(data)
         }
       }
-      
-      if (!isCompleted && onComplete) {
-        onComplete();
-      }
-      
+    } catch (error) {
+      if (onError) onError((error as Error).message);
     } finally {
       reader.releaseLock();
     }

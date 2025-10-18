@@ -79,24 +79,39 @@ func (r *AIRouter) CreatePostContentStream(ctx *gin.Context) {
 	ctx.Writer.Header().Set("Connection", "keep-alive")
 	ctx.Writer.Flush()
 
+	// type SSEEvent struct {
+	// 	Data string `json:"data"`
+	// }
+
 	if _, err := r.AIService.CreatePostContent(
 		ctx, r.ChatModel, reqBody.Topic, reqBody.Style,
 		func(chunk []byte) error {
-			formatted := fmt.Sprintf("data: %s\n\n", chunk)
-			if _, err := ctx.Writer.Write([]byte(formatted)); err != nil {
+			// ctx.SSEvent("message", chunk)
+			// event := SSEEvent{Data: string(chunk)}
+			// eventData, err := json.Marshal(event)
+			// if err != nil {
+			// 	return err
+			// }
+			if _, err := ctx.Writer.Write(append(append([]byte("data: "), chunk...), []byte("\n\n")...)); err != nil {
 				return err
 			}
+			// formatted := fmt.Sprintf("data: %s\n\n", chunk)
+			// if _, err := ctx.Writer.Write([]byte(formatted)); err != nil {
+			// 	return err
+			// }
 			ctx.Writer.Flush()
 			return nil
 		},
 	); err != nil {
-		fmt.Fprintf(ctx.Writer, "event: [ERROR]\ndata: %s\n\n", err.Error())
-		ctx.Writer.Flush()
-		return
+		// fmt.Fprintf(ctx.Writer, "data: [ERROR]\ndata: %s\n\n", err.Error())
+		// ctx.Writer.Flush()
+		// return
 	}
 
 	// 結束訊號
-	fmt.Fprintf(ctx.Writer, "event: [DONE]\n\n")
+	// fmt.Fprintf(ctx.Writer, "data: [DONE]\n\n")
+	// ctx.SSEvent("message", "[DONE]")
+	ctx.Writer.Write([]byte("data: [DONE]\n\n"))
 	ctx.Writer.Flush()
 }
 

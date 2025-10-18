@@ -3,6 +3,7 @@ package servers
 import (
 	"backend/internal/middlewares"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -24,12 +25,16 @@ func SetupGin(cfg *GinConfig) (*gin.Engine, *gin.RouterGroup) {
 	server := gin.Default()
 	apiRouter := server.Group("/api")
 	apiRouter.Use(middlewares.WarpGORMDBHandler(cfg.DB))
-	// allow CORS for development
 	if cfg.Debug {
-		apiRouter.Use(func(ctx *gin.Context) {
-			ctx.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-			ctx.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-			ctx.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization")
+		// allow CORS for development
+		apiRouter.Use(cors.New(cors.Config{
+			AllowOrigins:     []string{"*"}, // 允许的前端地址
+			AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+			AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+			AllowCredentials: true,
+		}))
+		apiRouter.OPTIONS("/*path", func(c *gin.Context) {
+			c.AbortWithStatus(204) // Status code 204 No Content
 		})
 	}
 
