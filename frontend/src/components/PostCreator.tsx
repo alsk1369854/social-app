@@ -72,7 +72,6 @@ const PostCreator: React.FC<PostCreatorProps> = ({ isLoggedIn, onCreatePost }) =
           {/* <MarkdownEditor
             value={content}
             onChange={(value) => setContent(value)}
-            onClick={handleTextareaClick}
             disabled={!isLoggedIn}
             maxLength={maxLength}
             placeholder={isLoggedIn ? "分享你的想法..." : "請先登入以發布貼文"}

@@ -238,7 +238,7 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
                   disabled={isLoading}
                   autoExpand={true}
                   preventAutoCollapse={true}
-                  className={`min-h-32 ${isLoading ? 'cursor-not-allowed bg-gray-50 dark:bg-gray-800 border-blue-200 dark:border-blue-800' : ''
+                  className={`min-h-32 h-100 ${isLoading ? 'cursor-not-allowed bg-gray-50 dark:bg-gray-800 border-blue-200 dark:border-blue-800' : ''
                     }`}
                 /> */}
               </div>

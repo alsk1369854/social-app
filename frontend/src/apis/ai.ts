@@ -8,6 +8,7 @@ import {
 } from './models/ai';
 
 const API_BASE_URL = 'http://localhost:28080';
+// const API_BASE_URL = '';
 
 class AIAPI {
   static async createPostContent(request: AIGenerateTextCreatePostContentRequest, accessToken: string): Promise<AIGenerateTextCreatePostContentResponse> {
@@ -60,7 +61,6 @@ class AIAPI {
         const { done, value } = await reader.read()
         if (done) break
         const event = decoder.decode(value, { stream: true });
-        console.log(event)
         const chunks = event.split("data: ")
         for (const chunk of chunks) {
           const data = chunk.substring(0, chunk.length - 2)
