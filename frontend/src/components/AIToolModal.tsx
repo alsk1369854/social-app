@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import AIAPI from '../apis/ai';
 import MarkdownEditor from './MarkdownEditor';
-import MDEditor from '@uiw/react-md-editor';
+import MDEditor, { commands } from '@uiw/react-md-editor';
+import rehypeSanitize from "rehype-sanitize";
 
 interface AIToolModalProps {
   isOpen: boolean;
@@ -194,15 +195,6 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
               <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
             </div>
           )}
-          <MDEditor
-            value={aiContent}
-            height="100%"
-            autoFocus={true}
-            autoFocusEnd={true}
-            visibleDragbar={true}
-            onChange={(value) => setAiContent(value || '')}
-          />
-          <MDEditor.Markdown source={aiContent} />
           {(aiContent || isLoading) && (
             <div className="mb-6">
               <div className="flex items-center justify-between mb-2">
@@ -221,8 +213,25 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
                 )}
               </div>
               <div className="relative">
-
-                <MarkdownEditor
+                <div className="mb-4">
+                  <MDEditor
+                    value={aiContent}
+                    autoFocus={true}
+                    autoFocusEnd={true}
+                    visibleDragbar={false}
+                    aria-disabled={isLoading}
+                    height="100%"
+                    extraCommands={[commands.codeEdit, commands.codeLive, commands.fullscreen]}
+                    onChange={value => !isLoading && setAiContent(value || '')}
+                    previewOptions={{
+                      rehypePlugins: [[rehypeSanitize]],
+                    }}
+                  // textareaProps={{
+                  //   maxLength: maxLength
+                  // }}
+                  />
+                </div>
+                {/* <MarkdownEditor
                   value={aiContent}
                   onChange={setAiContent}
                   placeholder="AI 生成的內容會在這裡顯示..."
@@ -231,7 +240,7 @@ const AIToolModal: React.FC<AIToolModalProps> = ({
                   preventAutoCollapse={true}
                   className={`min-h-32 ${isLoading ? 'cursor-not-allowed bg-gray-50 dark:bg-gray-800 border-blue-200 dark:border-blue-800' : ''
                     }`}
-                />
+                /> */}
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {isLoading
