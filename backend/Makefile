@@ -23,6 +23,6 @@ build-clear:
 .PHONY:build
 build: build-clear
 	mkdir -p dist
-# 	GOOS=darwin GOARCH=arm64 go build -o dist/main-macos main.go
-	GOOS=linux GOARCH=arm64 go build -o dist/main-linux main.go
+	GOOS=darwin GOARCH=arm64 go build -o dist/main-macos-arm64 main.go
+# 	GOOS=linux GOARCH=amd64 go build -o dist/main-linux-amd64 main.go
 
