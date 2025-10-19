@@ -9,7 +9,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 
 const basename = process.env.REACT_APP_BASE_URL || '/';
-
+console.log('env:', process.env);
 function App() {
   return (
     <ThemeProvider>
