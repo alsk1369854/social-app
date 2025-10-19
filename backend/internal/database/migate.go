@@ -27,7 +27,6 @@ func Migrate(db *gorm.DB) error {
 	}
 
 	// 創建管理員帳號
-
 	if adminEmail, adminPassword := os.Getenv("ADMIN_EMAIL"), os.Getenv("ADMIN_PASSWORD"); adminEmail != "" && adminPassword != "" {
 		_, err := createAdminUser(db, adminEmail, adminPassword)
 		if err != nil {
@@ -35,10 +34,57 @@ func Migrate(db *gorm.DB) error {
 		}
 	}
 
+	// 創建訪客帳號
+	_, err := createGuestUser(db, "temp@temp.com", "temp@temp")
+	if err != nil {
+		return err
+	}
+
 	// 預設創建，台北到台南的 city 資料
 	createTaiwanCitys(db)
 
 	return nil
+}
+
+func createGuestUser(db *gorm.DB, email string, password string) (*models.User, error) {
+	cryptoUtils := pkg.NewCryptoUtils()
+
+	// 驗證 email 格式，提取 username
+	re := regexp.MustCompile(`^(.+?)@.+\..+$`)
+	matches := re.FindStringSubmatch(email)
+	if len(matches) < 2 {
+		return nil, errors.New("invalid email format")
+	}
+
+	// 檢查是否已存在相同 email 的使用者
+	user := &models.User{}
+	if err := db.Where("email = ?", email).First(user).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	// 已存在訪客帳號，直接回傳
+	if user.ID != uuid.Nil {
+		return user, nil
+	}
+
+	// 建立訪客帳號
+	newUser := &models.User{
+		TableModel: models.TableModel{ID: uuid.New()},
+		UserBase: models.UserBase{
+			Username: "訪客",
+			Email:    email,
+			HashedPassword: cryptoUtils.GeneratePasswordHash(&pkg.CryptoUtilsPasswordHashInput{
+				Email:    email,
+				Password: password,
+			}),
+			Role: models.RoleNormalCustomer,
+		},
+	}
+	if err := db.Create(newUser).Error; err != nil {
+		return nil, err
+	}
+
+	return newUser, nil
 }
 
 func createAdminUser(db *gorm.DB, email string, password string) (*models.User, error) {
