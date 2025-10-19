@@ -1,27 +1,4 @@
 services:
-
-  backend:
-    build:
-      context: ..
-      dockerfile: backend/Dockerfile
-    restart: unless-stopped
-    environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME}
-      - JWT_SECRET=${JWT_SECRET}
-      - ADMIN_EMAIL=${ADMIN_EMAIL}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - OPENAI_BASE_URL=${OPENAI_BASE_URL}
-      - OPENAI_CHAT_MODEL=${OPENAI_CHAT_MODEL}
-    ports:
-      - "${SERVER_PORT}:8080"
-    depends_on:
-      - db
-
   db:
     image: postgres:16.4
     restart: unless-stopped
@@ -31,6 +8,24 @@ services:
       POSTGRES_DB: ${DB_NAME}
     volumes:
       - ${PWD}/postgres-data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT}:5432"
 
+  adminer:
+    image: adminer
+    restart: unless-stopped
+    ports:
+      - 18080:8080
+  
+  pgadmin:
+    image: dpage/pgadmin4:8.8
+    restart: unless-stopped
+    tty: true
+    stdin_open: true
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "18081:80"
 
 
