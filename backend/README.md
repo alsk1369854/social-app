@@ -1,5 +1,9 @@
 
 
+docker compose -f docker-compose.yml.dev up
+
+make debug
+
 ## Setup
 - go: 1.24.5
 

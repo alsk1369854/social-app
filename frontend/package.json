@@ -1,7 +1,8 @@
 {
   "name": "frontend",
-  "homepage": "./",
   "version": "0.1.0",
+  "homepage": "",
+  "proxy": "http://localhost:28080",
   "private": true,
   "dependencies": {
     "@tailwindcss/cli": "^4.1.11",
@@ -54,6 +55,5 @@
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17"
-  },
-  "proxy": "http://localhost:28080"
+  }
 }
