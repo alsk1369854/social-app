@@ -44,7 +44,7 @@ func TestUserRouter(t *testing.T) {
 			// 1. 創建一個新用戶
 			username := pkg.GetRandomString(5)
 			payload := models.UserRegisterRequest{
-				Username: username,
+
 				Email:    username + "@example.com",
 				Password: "password123",
 			}
@@ -76,7 +76,7 @@ func TestUserRouter(t *testing.T) {
 			// 1. 創建一個新用戶
 			username := pkg.GetRandomString(5)
 			payload := models.UserRegisterRequest{
-				Username: username,
+
 				Email:    username + "@example.com",
 				Password: "password123",
 			}
@@ -130,7 +130,7 @@ func TestUserRouter(t *testing.T) {
 		t.Run("成功註冊", func(t *testing.T) {
 			username := pkg.GetRandomString(5)
 			payload := models.UserRegisterRequest{
-				Username: username,
+
 				Email:    username + "@example.com",
 				Password: "password123",
 			}
@@ -155,7 +155,7 @@ func TestUserRouter(t *testing.T) {
 			citySlice, _ := userRouter.CityService.GetAll(ctx)
 			username := pkg.GetRandomString(5)
 			payload := models.UserRegisterRequest{
-				Username: username,
+
 				Email:    username + "@example.com",
 				Password: "password123",
 				Address: &models.UserRegisterRequestAddress{
@@ -185,7 +185,7 @@ func TestUserRouter(t *testing.T) {
 		t.Run("註冊會員 - 包含年齡", func(t *testing.T) {
 			username := pkg.GetRandomString(5)
 			payload := models.UserRegisterRequest{
-				Username: username,
+
 				Email:    username + "@example.com",
 				Password: "password123",
 				Age:      pkg.GetPointer(int64(30)),
@@ -213,7 +213,7 @@ func TestUserRouter(t *testing.T) {
 			citySlice, _ := userRouter.CityService.GetAll(ctx)
 			username := pkg.GetRandomString(5)
 			payload := models.UserRegisterRequest{
-				Username: username,
+
 				Email:    username + "@example.com",
 				Password: "password123",
 				Age:      pkg.GetPointer(int64(30)),
@@ -246,7 +246,7 @@ func TestUserRouter(t *testing.T) {
 			// 準備重複的 email payload
 			username := pkg.GetRandomString(5)
 			payload := models.UserRegisterRequest{
-				Username: username,
+
 				Email:    username + "@example.com",
 				Password: "password123",
 			}
@@ -276,7 +276,7 @@ func TestUserRouter(t *testing.T) {
 			t.Run("少於 6 個字元", func(t *testing.T) {
 				username := pkg.GetRandomString(5)
 				payload := models.UserRegisterRequest{
-					Username: username,
+
 					Email:    username + "@example.com",
 					Password: "123",
 				}
@@ -298,7 +298,7 @@ func TestUserRouter(t *testing.T) {
 			t.Run("超過 12 個字元", func(t *testing.T) {
 				username := pkg.GetRandomString(5)
 				payload := models.UserRegisterRequest{
-					Username: username,
+
 					Email:    username + "@example.com",
 					Password: "1234567890123",
 				}

@@ -5,6 +5,7 @@ import (
 	"backend/internal/pkg"
 	"backend/internal/services"
 	"log"
+	"regexp"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -129,9 +130,23 @@ func (r *UserRouter) Register(ctx *gin.Context) {
 		return
 	}
 
+	// 驗證 email 格式，提取 username
+	username := ""
+	if reqBody.Username != nil {
+		username = *reqBody.Username
+	} else {
+		re := regexp.MustCompile(`^(.+?)@.+\..+$`)
+		matches := re.FindStringSubmatch(reqBody.Email)
+		if len(matches) < 2 {
+			ctx.JSON(400, models.ErrorResponse{Error: "invalid email format"})
+			return
+		}
+		username = matches[1]
+	}
+
 	// 創建用戶與地址資料
 	userBase := &models.UserBase{
-		Username: reqBody.Username,
+		Username: username,
 		Email:    reqBody.Email,
 		Age:      reqBody.Age,
 		HashedPassword: r.CryptoUtils.GeneratePasswordHash(&pkg.CryptoUtilsPasswordHashInput{

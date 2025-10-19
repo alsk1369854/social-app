@@ -78,7 +78,6 @@ func SetupTestUser(server *gin.Engine) (*models.UserRegisterResponse, *models.Us
 	// 1. 創建一個新用戶
 	username := pkg.GetRandomString(5)
 	registerReqBody := &models.UserRegisterRequest{
-		Username: username,
 		Email:    username + "@example.com",
 		Password: "password123",
 	}

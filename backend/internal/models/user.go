@@ -29,9 +29,9 @@ type UserBase struct {
 
 // User Register structs
 type UserRegisterRequest struct {
-	Username string                      `json:"username" binding:"required"`
 	Email    string                      `json:"email" binding:"required"`
 	Password string                      `json:"password" binding:"required"`
+	Username *string                     `json:"username"`
 	Age      *int64                      `json:"age"`
 	Address  *UserRegisterRequestAddress `json:"address"`
 }
