@@ -18,7 +18,7 @@ export interface UserRegisterRequestAddress {
 export interface UserRegisterRequest {
   email: string;
   password: string;
-  username: string;
+  username?: string;
   address?: UserRegisterRequestAddress;
   age?: number;
 }

@@ -56,13 +56,13 @@ const RegisterPage: React.FC = () => {
 
   const validateForm = (): string | null => {
     // Required fields validation
-    if (!formData.username.trim()) return '請輸入使用者名稱';
+    // if (!formData.username.trim()) return '請輸入使用者名稱';
     if (!formData.email.trim()) return '請輸入電子郵件';
     if (!formData.password) return '請輸入密碼';
     if (!formData.confirmPassword) return '請確認密碼';
 
     // Username validation
-    if (formData.username.length < 2) return '使用者名稱至少需要2個字符';
+    // if (formData.username && formData.username.length < 2) return '使用者名稱至少需要2個字符';
     if (formData.username.length > 50) return '使用者名稱不能超過50個字符';
 
     // Email format validation
@@ -98,9 +98,9 @@ const RegisterPage: React.FC = () => {
 
     try {
       const registerRequest = {
-        username: formData.username.trim(),
         email: formData.email.trim(),
         password: formData.password,
+        ...(formData.username && { username: formData.username.trim() }),
         ...(formData.age && { age: Number(formData.age) }),
         ...(formData.cityID && formData.street && {
           address: {
@@ -126,8 +126,8 @@ const RegisterPage: React.FC = () => {
           </h2>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
             或{' '}
-            <Link 
-              to="/login" 
+            <Link
+              to="/login"
               className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
             >
               登入現有帳戶
@@ -137,23 +137,7 @@ const RegisterPage: React.FC = () => {
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
-            {/* Username */}
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                使用者名稱 <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                required
-                value={formData.username}
-                onChange={handleInputChange}
-                className="relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="請輸入使用者名稱"
-                disabled={state.isLoading}
-              />
-            </div>
+
 
             {/* Email */}
             <div>
@@ -208,6 +192,23 @@ const RegisterPage: React.FC = () => {
                 onChange={handleInputChange}
                 className="relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 placeholder="請再次輸入密碼"
+                disabled={state.isLoading}
+              />
+            </div>
+
+            {/* Username */}
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                使用者名稱 <span className="text-gray-500 text-xs">(選填)</span>
+              </label>
+              <input
+                id="username"
+                name="username"
+                type="text"
+                value={formData.username}
+                onChange={handleInputChange}
+                className="relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                placeholder="請輸入使用者名稱"
                 disabled={state.isLoading}
               />
             </div>

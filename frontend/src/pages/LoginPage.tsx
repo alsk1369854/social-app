@@ -62,8 +62,8 @@ const LoginPage: React.FC = () => {
           </h2>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
             或{' '}
-            <Link 
-              to="/register" 
+            <Link
+              to="/register"
               className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
             >
               註冊新帳戶
@@ -131,6 +131,40 @@ const LoginPage: React.FC = () => {
                 </div>
               ) : (
                 '登入'
+              )}
+            </button>
+          </div>
+
+          {/* 訪客登入按鈕 */}
+          <div>
+            <button
+              type="button"
+              onClick={async () => {
+                setFormData({
+                  email: 'temp@temp.com',
+                  password: 'temp@temp'
+                });
+                setError(null);
+                try {
+                  await login({
+                    email: 'temp@temp.com',
+                    password: 'temp@temp'
+                  });
+                  navigate('/');
+                } catch (error) {
+                  setError(error instanceof Error ? error.message : '訪客登入失敗，請稍後再試');
+                }
+              }}
+              disabled={state.isLoading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed dark:focus:ring-offset-gray-900"
+            >
+              {state.isLoading ? (
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600 mr-2"></div>
+                  登入中...
+                </div>
+              ) : (
+                '訪客登入'
               )}
             </button>
           </div>
