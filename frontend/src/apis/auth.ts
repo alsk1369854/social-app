@@ -7,7 +7,7 @@ import {
   City
 } from './models/auth';
 
-const API_BASE_URL = '';
+const API_BASE_URL = process.env.REACT_APP_BASE_URL || "";
 
 class AuthAPI {
   static async login(request: UserLoginRequest): Promise<UserLoginResponse> {

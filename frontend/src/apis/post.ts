@@ -6,7 +6,7 @@ import {
   ErrorResponse
 } from './models/post';
 
-const API_BASE_URL = '';
+const API_BASE_URL = process.env.REACT_APP_BASE_URL || "";
 
 class PostAPI {
   static async createPost(request: PostCreateRequest, accessToken: string): Promise<PostCreateResponse> {

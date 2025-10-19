@@ -8,7 +8,8 @@ import {
 } from './models/ai';
 
 // const API_BASE_URL = 'http://localhost:28080';
-const API_BASE_URL = '';
+const API_BASE_URL = process.env.REACT_APP_BASE_URL || "";
+
 
 class AIAPI {
   static async createPostContent(request: AIGenerateTextCreatePostContentRequest, accessToken: string): Promise<AIGenerateTextCreatePostContentResponse> {

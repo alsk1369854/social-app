@@ -8,11 +8,13 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 
+const basename = process.env.REACT_APP_BASE_URL || '/';
+
 function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Router basename="/social-app">
+        <Router basename={basename}>
           <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
             <Routes>
               <Route path="/" element={<HomePage />} />
