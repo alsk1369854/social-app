@@ -5,7 +5,6 @@ import (
 	"backend/internal/models"
 	"backend/internal/pkg"
 	"backend/internal/services"
-	"fmt"
 	"log"
 	"slices"
 	"sync"
@@ -49,71 +48,11 @@ func (r *AIRouter) Bind(_router *gin.RouterGroup) {
 	router := _router.Group("/ai")
 	// POST
 	{
-		router.POST("/generate/text/content-optimize", middlewares.VerifyAccessToken(middlewares.ParseJWTAccessToken), r.ContentOptimization)
-		router.POST("/generate/text/content-optimize/stream", middlewares.VerifyAccessToken(middlewares.ParseJWTAccessToken), r.ContentOptimizationStream)
 		router.POST("/generate/text/create-post-content", middlewares.VerifyAccessToken(middlewares.ParseJWTAccessToken), r.CreatePostContent)
 		router.POST("/generate/text/create-post-content/stream", middlewares.VerifyAccessToken(middlewares.ParseJWTAccessToken), r.CreatePostContentStream)
+		router.POST("/generate/text/content-optimize", middlewares.VerifyAccessToken(middlewares.ParseJWTAccessToken), r.ContentOptimization)
+		router.POST("/generate/text/content-optimize/stream", middlewares.VerifyAccessToken(middlewares.ParseJWTAccessToken), r.ContentOptimizationStream)
 	}
-}
-
-// @title AI API
-// @Summary Create post content using AI with streaming
-// @Tags AI
-// @Security AccessToken
-// @Accept application/json
-// @Produce text/event-stream
-// @Param request body models.AIGenerateTextCreatePostContentRequest true "AI Create Post Content Request"
-// @Success 200 {string} string "Streaming response"
-// @Failure 400 {object} models.ErrorResponse
-// @Failure 500 {object} models.ErrorResponse
-// @Router /api/ai/generate/text/create-post-content/stream [post]
-func (r *AIRouter) CreatePostContentStream(ctx *gin.Context) {
-	reqBody := &models.AIGenerateTextCreatePostContentRequest{}
-	if err := ctx.ShouldBindJSON(reqBody); err != nil {
-		ctx.JSON(400, models.ErrorResponse{Error: "Invalid request body"})
-		return
-	}
-
-	// 設定 Header 為流式傳輸
-	ctx.Writer.Header().Set("Content-Type", "text/event-stream")
-	ctx.Writer.Header().Set("Cache-Control", "no-cache")
-	ctx.Writer.Header().Set("Connection", "keep-alive")
-	ctx.Writer.Flush()
-
-	// type SSEEvent struct {
-	// 	Data string `json:"data"`
-	// }
-
-	if _, err := r.AIService.CreatePostContent(
-		ctx, r.ChatModel, reqBody.Topic, reqBody.Style,
-		func(chunk []byte) error {
-			// ctx.SSEvent("message", chunk)
-			// event := SSEEvent{Data: string(chunk)}
-			// eventData, err := json.Marshal(event)
-			// if err != nil {
-			// 	return err
-			// }
-			if _, err := ctx.Writer.Write(slices.Concat([]byte("data: "), []byte(chunk), []byte("\n\n"))); err != nil {
-				return err
-			}
-			// formatted := fmt.Sprintf("data: %s\n\n", chunk)
-			// if _, err := ctx.Writer.Write([]byte(formatted)); err != nil {
-			// 	return err
-			// }
-			ctx.Writer.Flush()
-			return nil
-		},
-	); err != nil {
-		ctx.Writer.Write(slices.Concat([]byte("data: [ERROR]"), []byte(err.Error()), []byte("\n\n")))
-		ctx.Writer.Flush()
-		return
-	}
-
-	// 結束訊號
-	// fmt.Fprintf(ctx.Writer, "data: [DONE]\n\n")
-	// ctx.SSEvent("message", "[DONE]")
-	ctx.Writer.Write([]byte("data: [DONE]\n\n"))
-	ctx.Writer.Flush()
 }
 
 // @title AI API
@@ -144,6 +83,50 @@ func (r *AIRouter) CreatePostContent(ctx *gin.Context) {
 		Content: output,
 	}
 	ctx.JSON(200, respBody)
+}
+
+// @title AI API
+// @Summary Create post content using AI with streaming
+// @Tags AI
+// @Security AccessToken
+// @Accept application/json
+// @Produce text/event-stream
+// @Param request body models.AIGenerateTextCreatePostContentRequest true "AI Create Post Content Request"
+// @Success 200 {string} string "Streaming response"
+// @Failure 400 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
+// @Router /api/ai/generate/text/create-post-content/stream [post]
+func (r *AIRouter) CreatePostContentStream(ctx *gin.Context) {
+	reqBody := &models.AIGenerateTextCreatePostContentRequest{}
+	if err := ctx.ShouldBindJSON(reqBody); err != nil {
+		ctx.JSON(400, models.ErrorResponse{Error: "Invalid request body"})
+		return
+	}
+
+	// 設定 Header 為流式傳輸
+	ctx.Writer.Header().Set("Content-Type", "text/event-stream")
+	ctx.Writer.Header().Set("Cache-Control", "no-cache")
+	ctx.Writer.Header().Set("Connection", "keep-alive")
+	ctx.Writer.Flush()
+
+	if _, err := r.AIService.CreatePostContent(
+		ctx, r.ChatModel, reqBody.Topic, reqBody.Style,
+		func(chunk []byte) error {
+			if _, err := ctx.Writer.Write(slices.Concat([]byte("data: "), []byte(chunk), []byte("\n\n"))); err != nil {
+				return err
+			}
+			ctx.Writer.Flush()
+			return nil
+		},
+	); err != nil {
+		ctx.Writer.Write(slices.Concat([]byte("data: [ERROR]"), []byte(err.Error()), []byte("\n\n")))
+		ctx.Writer.Flush()
+		return
+	}
+
+	// 結束訊號
+	ctx.Writer.Write([]byte("data: [DONE]\n\n"))
+	ctx.Writer.Flush()
 }
 
 // @title AI API
@@ -203,20 +186,19 @@ func (r *AIRouter) ContentOptimizationStream(ctx *gin.Context) {
 	if _, err := r.AIService.ContentOptimization(
 		ctx, r.ChatModel, reqBody.Context, reqBody.Style,
 		func(chunk []byte) error {
-			formatted := fmt.Sprintf("data: %s\n\n", chunk)
-			if _, err := ctx.Writer.Write([]byte(formatted)); err != nil {
+			if _, err := ctx.Writer.Write(slices.Concat([]byte("data: "), []byte(chunk), []byte("\n\n"))); err != nil {
 				return err
 			}
 			ctx.Writer.Flush()
 			return nil
 		},
 	); err != nil {
-		fmt.Fprintf(ctx.Writer, "event: [ERROR]\ndata: %s\n\n", err.Error())
+		ctx.Writer.Write(slices.Concat([]byte("data: [ERROR]"), []byte(err.Error()), []byte("\n\n")))
 		ctx.Writer.Flush()
 		return
 	}
 
 	// 結束訊號
-	fmt.Fprintf(ctx.Writer, "event: [DONE]\n\n")
+	ctx.Writer.Write([]byte("data: [DONE]\n\n"))
 	ctx.Writer.Flush()
 }

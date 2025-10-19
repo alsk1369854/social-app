@@ -5,13 +5,11 @@ import (
 	"backend/internal/models"
 	"backend/internal/pkg"
 	"backend/internal/services"
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
-	"unicode/utf8"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -276,9 +274,7 @@ func (r *PostRouter) CreatePost(ctx *gin.Context) {
 		ctx.JSON(400, models.ErrorResponse{Error: "invalid request body"})
 		return
 	}
-	contentLen := utf8.RuneCountInString(reqBody.Content)
-	fmt.Print(contentLen)
-	if reqBody.Content == "" || utf8.RuneCountInString(reqBody.Content) > 500 {
+	if reqBody.Content == "" || len([]rune(reqBody.Content)) > 500 {
 		ctx.JSON(400, models.ErrorResponse{Error: "content characters must be between 0 and 500"})
 		return
 	}

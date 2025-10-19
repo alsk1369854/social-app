@@ -80,23 +80,6 @@ func main() {
 		ctx.File("./public/index.html")
 	})
 
-	// History API fallback for SPA under /social-app
-	server.NoRoute(func(ctx *gin.Context) {
-		path := ctx.Request.URL.Path
-		// Let API and swagger requests pass through as 404
-		if strings.HasPrefix(path, "/api/") || strings.HasPrefix(path, "/swagger/") {
-			ctx.Status(404)
-			return
-		}
-		// Serve SPA index for /social-app/* and root-level client routes
-		if path == "/social-app" || strings.HasPrefix(path, "/social-app/") || path == "/" {
-			ctx.File("./public/index.html")
-			return
-		}
-		// Also serve index.html for other client-side routes if needed
-		ctx.File("./public/index.html")
-	})
-
 	// Setup AI Router
 	routers.NewAIRouter(&models.AIModelConfigs{
 		ChatModel: models.AIModelConfig{
