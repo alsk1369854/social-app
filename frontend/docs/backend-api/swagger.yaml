@@ -252,7 +252,6 @@ definitions:
     required:
     - email
     - password
-    - username
     type: object
   models.UserRegisterRequestAddress:
     properties:
@@ -587,7 +586,7 @@ paths:
         type: string
       - description: User ID
         in: query
-        name: user-id
+        name: userID
         type: string
       produces:
       - application/json

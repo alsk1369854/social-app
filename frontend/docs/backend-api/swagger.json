@@ -481,7 +481,7 @@
                     {
                         "type": "string",
                         "description": "User ID",
-                        "name": "user-id",
+                        "name": "userID",
                         "in": "query"
                     }
                 ],
@@ -969,8 +969,7 @@
             "type": "object",
             "required": [
                 "email",
-                "password",
-                "username"
+                "password"
             ],
             "properties": {
                 "address": {

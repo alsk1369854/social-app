@@ -1,1 +1,5 @@
-# nknu-social-app
+# social-app
+
+## Deploy
+
+### 
