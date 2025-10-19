@@ -30,6 +30,12 @@ RUN go mod download
 # Copy source code
 COPY backend ./
 
+# Generate Swagger docs (provides package `backend/docs`)
+# 1) Install swag CLI
+RUN go install github.com/swaggo/swag/cmd/swag@latest
+# 2) Generate docs at module root (/app)
+RUN $(go env GOPATH)/bin/swag init -g main.go -o docs
+
 # Build the application for Linux AMD64
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main-linux-amd64 .
 
