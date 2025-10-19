@@ -8,12 +8,12 @@ import {
 } from './models/ai';
 
 // const API_BASE_URL = 'http://localhost:28080';
-const API_BASE_URL = process.env.REACT_APP_BASE_URL || "";
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "";
 
 
 class AIAPI {
   static async createPostContent(request: AIGenerateTextCreatePostContentRequest, accessToken: string): Promise<AIGenerateTextCreatePostContentResponse> {
-    const response = await fetch(`${API_BASE_URL}/api/ai/generate/text/create-post-content`, {
+    const response = await fetch(`${API_BASE_URL}/ai/generate/text/create-post-content`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -41,7 +41,7 @@ class AIAPI {
     onComplete?: () => void,
     onError?: (error: string) => void
   ): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/api/ai/generate/text/create-post-content/stream`, {
+    const response = await fetch(`${API_BASE_URL}/ai/generate/text/create-post-content/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -85,7 +85,7 @@ class AIAPI {
   }
 
   static async optimizeContent(request: AIGenerateTextContentOptimizationRequest, accessToken: string): Promise<AIGenerateTextContentOptimizationResponse> {
-    const response = await fetch(`${API_BASE_URL}/api/ai/generate/text/content-optimize`, {
+    const response = await fetch(`${API_BASE_URL}/ai/generate/text/content-optimize`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -113,7 +113,7 @@ class AIAPI {
     onComplete?: () => void,
     onError?: (error: string) => void
   ): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/api/ai/generate/text/content-optimize/stream`, {
+    const response = await fetch(`${API_BASE_URL}/ai/generate/text/content-optimize/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -6,11 +6,11 @@ import {
   ErrorResponse
 } from './models/post';
 
-const API_BASE_URL = process.env.REACT_APP_BASE_URL || "";
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "";
 
 class PostAPI {
   static async createPost(request: PostCreateRequest, accessToken: string): Promise<PostCreateResponse> {
-    const response = await fetch(`${API_BASE_URL}/api/post`, {
+    const response = await fetch(`${API_BASE_URL}/post`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -35,14 +35,18 @@ class PostAPI {
   }
 
   static async searchPosts(params: PostSearchParams): Promise<PostSearchResponse> {
-    const urlParams = new URLSearchParams();
+    // const urlParams = new URLSearchParams();
+    // if (params.keyword) urlParams.append('keyword', params.keyword);
+    // if (params.offset) urlParams.append('offset', params.offset);
+    // if (params.limit) urlParams.append('limit', params.limit);
+    // if (params.userID) urlParams.append('userID', params.userID);
+    // const url = `/post/list/search${urlParams.toString() ? `?${urlParams.toString()}` : ''}`;
 
-    if (params.keyword) urlParams.append('keyword', params.keyword);
-    if (params.offset) urlParams.append('offset', params.offset);
-    if (params.limit) urlParams.append('limit', params.limit);
-    if (params['user-id']) urlParams.append('user-id', params['user-id']);
-
-    const url = `/api/post/list/search${urlParams.toString() ? `?${urlParams.toString()}` : ''}`;
+    let url = "/post/list/search";
+    const queryParams = Array.from(Object.entries(params)).filter(([key, value]) => value).map(([key, value]) => `${key}=${value}`).join('&');
+    if (queryParams.length > 0) {
+      url += `?${queryParams}`;
+    }
 
     const response = await fetch(`${API_BASE_URL}${url}`, {
       method: 'GET',

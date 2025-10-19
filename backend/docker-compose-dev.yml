@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:16.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - ${PWD}/postgres-data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT}:5432"
+
+  adminer:
+    image: adminer
+    restart: unless-stopped
+    ports:
+      - 18080:8080
+  
+  pgadmin:
+    image: dpage/pgadmin4:8.8
+    restart: unless-stopped
+    tty: true
+    stdin_open: true
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "18081:80"
+
+

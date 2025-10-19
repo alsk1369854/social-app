@@ -17,7 +17,7 @@ export interface PostSearchParams {
   keyword?: string;
   offset?: string;
   limit?: string;
-  'user-id'?: string;
+  userID?: string;
 }
 
 export interface PostGetPostsByKeywordResponseItemTag {

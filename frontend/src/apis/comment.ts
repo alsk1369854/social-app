@@ -5,11 +5,11 @@ import {
   ErrorResponse
 } from './models/comment';
 
-const API_BASE_URL = process.env.REACT_APP_BASE_URL || "";
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "";
 
 class CommentAPI {
   static async createComment(request: CommentCreateRequest, accessToken: string): Promise<CommentCreateResponse> {
-    const response = await fetch(`${API_BASE_URL}/api/comment`, {
+    const response = await fetch(`${API_BASE_URL}/comment`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -34,7 +34,7 @@ class CommentAPI {
   }
 
   static async getCommentsByPostID(postID: string): Promise<CommentGetListByPostIDResponseItem[]> {
-    const response = await fetch(`${API_BASE_URL}/api/comment/list/post/${postID}`, {
+    const response = await fetch(`${API_BASE_URL}/comment/list/post/${postID}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

@@ -73,7 +73,7 @@ func (r *PostRouter) Bind(_router *gin.RouterGroup) {
 // @Param keyword query string false "Search keyword"
 // @Param offset query string false "Offset"
 // @Param limit query string false "Limit"
-// @Param user-id query string false "User ID"
+// @Param userID query string false "User ID"
 // @Success 200 {object} models.PaginationResponse[models.PostGetPostsByKeywordResponseItem]
 // @Failure 400 {object} models.ErrorResponse
 // @Failure 500 {object} models.ErrorResponse
@@ -91,7 +91,7 @@ func (r *PostRouter) GetPostsByKeyword(ctx *gin.Context) {
 		return
 	}
 	var userID *uuid.UUID
-	queryUserID := ctx.Query("user-id")
+	queryUserID := ctx.Query("userID")
 	if queryUserID != "" {
 		parsedUserID, err := uuid.Parse(queryUserID)
 		if err != nil {
